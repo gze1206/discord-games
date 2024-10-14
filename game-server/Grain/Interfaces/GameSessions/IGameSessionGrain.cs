@@ -1,8 +1,8 @@
-﻿using server.Core;
+﻿using DiscordGames.Core;
 
-namespace server.Grains.GameSessions;
+namespace DiscordGames.Grain.Interfaces.GameSessions;
 
-[Alias("server.Grains.IGameSessionGrain")]
+[Alias("Server.Grains.IGameSessionGrain")]
 public interface IGameSessionGrain : IGrainWithGuidKey
 {
     [Alias("JoinGame")] Task<JoinPlayerResult> JoinPlayer(UserId userId);

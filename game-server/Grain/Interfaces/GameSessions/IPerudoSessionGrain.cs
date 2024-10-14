@@ -1,8 +1,8 @@
-﻿using server.Core;
+﻿using DiscordGames.Core;
 
-namespace server.Grains.GameSessions;
+namespace DiscordGames.Grain.Interfaces.GameSessions;
 
-[Alias("server.Grains.GameSessions.IPerudoSessionGrain")]
+[Alias("Server.Grains.GameSessions.IPerudoSessionGrain")]
 public interface IPerudoSessionGrain : IGameSessionGrain
 {
     [Alias("PlaceBid")]

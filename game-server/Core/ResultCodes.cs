@@ -1,4 +1,4 @@
-﻿namespace server.Core;
+﻿namespace DiscordGames.Core;
 
 #region GameSession Grain Results
 
