@@ -16,14 +16,15 @@ try
     var builder = Host.CreateDefaultBuilder(args)
         .UseOrleans(silo =>
         {
-            silo.UseLocalhostClustering()
-                .ConfigureLogging(logging => logging.AddConsole());
+            silo.UseLocalhostClustering();
 
             silo.UseDashboard(options => options.HostSelf = true);
         })
         .UseConsoleLifetime();
 
-    builder.ConfigureServices(services => services.AddLogging(conf => conf.AddConsole()));
+    builder.ConfigureServices(services => services
+        .AddLogging(conf => conf
+            .AddSimpleConsole(options => options.IncludeScopes = true)));
 
     using var host = builder.Build();
 
