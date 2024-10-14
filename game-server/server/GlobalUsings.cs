@@ -1,1 +1,1 @@
-﻿global using UserIdType = System.Int32;
+﻿global using UserId = System.Int32;
