@@ -78,7 +78,7 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
         this.State.Players.Add(userId);
         
         this.logger.LogJoinPlayerOk(this.GetPrimaryKey(), userId);
-        
+
         return Task.FromResult(JoinPlayerResult.Ok);
     }
 
