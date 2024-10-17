@@ -8,8 +8,9 @@ public class MessageHandler : WebSocketBehavior
 {
     protected override void OnMessage(MessageEventArgs e)
     {
+        if (!int.TryParse(e.Data, out var userId)) userId = 0;
         var session = ServiceLocator.GrainFactory.GetGrain<IPerudoSessionGrain>(new Guid());
-        var result = session.JoinPlayer(1).GetAwaiter().GetResult();
+        var result = session.JoinPlayer(userId).GetAwaiter().GetResult();
         this.Send(e.Data + result);
     }
 }

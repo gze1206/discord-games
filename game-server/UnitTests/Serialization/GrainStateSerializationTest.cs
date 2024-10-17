@@ -15,7 +15,6 @@ public class GrainStateSerializationTest
     public void Init()
     {
         this.serializer = new CustomJsonGrainStorageSerializer(new CustomJsonConvertBuilder()
-            .Add<LinkedListJsonConverter<PerudoSessionGrain.PlayerInfo>>()
             .BakeOptions());
     }
 
@@ -34,7 +33,9 @@ public class GrainStateSerializationTest
             IsInitialized = true,
             IsPlaying = true,
             IsClassicRule = false,
-            CurrentTurn = players.First(),
+            CurrentTurn = 0,
+            LastBidQuantity = 4,
+            LastBidFace = 3,
         };
 
         foreach (var playerId in players)
@@ -43,7 +44,7 @@ public class GrainStateSerializationTest
 
             var info = new PerudoSessionGrain.PlayerInfo(playerId, 3);
             info.Roll();
-            state.TurnOrder.AddLast(info);
+            state.TurnOrder.Add(info);
         }
 
         var serialized = this.serializer.Serialize(state);
@@ -58,6 +59,8 @@ public class GrainStateSerializationTest
         Assert.AreEqual(state.IsPlaying, deserialized.IsPlaying, "역직렬화 이후 플레이 상태가 바뀌면 안됩니다.");
         Assert.AreEqual(state.IsClassicRule, deserialized.IsClassicRule, "역직렬화 이후 규칙 설정이 바뀌면 안됩니다.");
         Assert.AreEqual(state.CurrentTurn, deserialized.CurrentTurn, "역직렬화 이후 현재 턴 정보가 바뀌면 안됩니다.");
+        Assert.AreEqual(state.LastBidQuantity, deserialized.LastBidQuantity, "역직렬화 이후 마지막으로 선언된 주사위의 수 정보가 바뀌면 안됩니다.");
+        Assert.AreEqual(state.LastBidFace, deserialized.LastBidFace, "역직렬화 이후 마지막으로 선언된 주사위의 눈 정보가 바뀌면 안됩니다.");
         
         MyAssert.AreSequenceEquals(state.TurnOrder, deserialized.TurnOrder, (expected, actual) =>
         {

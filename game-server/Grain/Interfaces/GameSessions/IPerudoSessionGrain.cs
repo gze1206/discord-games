@@ -7,7 +7,7 @@ namespace DiscordGames.Grain.Interfaces.GameSessions;
 public interface IPerudoSessionGrain : IGameSessionGrain
 {
     [Alias("InitSession")]
-    Task<InitSessionResult> InitSession(UserId userId, int maxPlayer, bool isClassicRule);
+    Task<InitPerudoSessionResult> InitSession(UserId userId, int maxPlayer, bool isClassicRule);
     
     [Alias("PlaceBid")]
     Task<PlaceBidResult> PlaceBid(int userId, int quantity, int face);

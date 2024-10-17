@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using DiscordGames.Grain.Implements.GameSessions;
 using DiscordGames.Server;
 using DiscordGames.Server.Net;
 using DiscordGames.Server.Serialization.Json;
@@ -18,8 +17,7 @@ try
     var builder = Host.CreateDefaultBuilder(args)
         .UseOrleans(silo =>
         {
-            var jsonConvert = new CustomJsonConvertBuilder()
-                .Add<LinkedListJsonConverter<PerudoSessionGrain.PlayerInfo>>();
+            var jsonConvert = new CustomJsonConvertBuilder();
             
             silo.UseLocalhostClustering();
 

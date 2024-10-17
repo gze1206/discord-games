@@ -2,14 +2,6 @@
 
 #region GameSession Grain Results
 
-public enum InitSessionResult
-{
-    Ok,
-    
-    AlreadyInitialized = -1,
-    AlreadyStarted = -2,
-}
-
 public enum JoinPlayerResult
 {
     Ok,
@@ -51,11 +43,23 @@ public enum StartGameResult
 
 #endregion // GameSession Grain Results
 
+public enum InitPerudoSessionResult
+{
+    Ok,
+    
+    AlreadyInitialized = -1,
+    AlreadyStarted = -2,
+    InvalidMaxPlayer = -3,
+}
+
 public enum PlaceBidResult
 {
     Ok,
     
-    CannotLowerQuantityBid,
-    CannotLowerFaceBid,
-    InvalidFace,
+    NotStartedGame = -1,
+    NotFromCurrentTurnUser = -2,
+    CannotLowerQuantityBid = -3,
+    CannotLowerFaceBid = -4,
+    InvalidQuantity = -5,
+    InvalidFace = -6,
 }
