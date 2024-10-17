@@ -15,6 +15,8 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
     
     private readonly ILogger<PerudoSessionGrain> logger;
 
+    private PlayerNode? currentTurnNode;
+
     public PerudoSessionGrain(ILogger<PerudoSessionGrain> logger)
     {
         this.logger = logger;
@@ -22,17 +24,44 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
 
     public Task<PerudoSessionState> GetState() => Task.FromResult(this.State);
 
-    public Task<InitSessionResult> InitSession(UserId userId, bool isClassicRule)
+    protected override async Task ReadStateAsync()
+    {
+        await base.ReadStateAsync();
+
+        if (this.currentTurnNode == null && this.State.CurrentTurn.HasValue)
+        {
+            var currentTurnUserId = this.State.CurrentTurn.Value;
+            var node = this.State.TurnOrder.First!;
+            while (node.Next != null && node.Value.UserId != currentTurnUserId)
+            {
+                node = node.Next;
+            }
+
+            this.currentTurnNode = node ?? throw new InvalidOperationException("그 사이에 해당 유저가 사라지면 이상함");
+        }
+    }
+
+    protected override async Task WriteStateAsync()
+    {
+        this.State.CurrentTurn = this.State.IsPlaying
+            ? this.currentTurnNode?.Value.UserId
+            : null;
+
+        await base.WriteStateAsync();
+    }
+
+    public Task<InitSessionResult> InitSession(UserId userId, int maxPlayer, bool isClassicRule)
     {
         using var logScope = this.logger.BeginScope("Perudo/InitSession");
         if (this.State.IsPlaying) return Task.FromResult(InitSessionResult.AlreadyStarted);
         if (this.State.IsInitialized) return Task.FromResult(InitSessionResult.AlreadyInitialized);
 
         this.State.HostUserId = userId;
+        this.State.MaxPlayer = maxPlayer;
         this.State.IsClassicRule = isClassicRule;
         this.State.IsInitialized = true;
         
-        this.logger.LogPerudoInitSessionOk(this.GetPrimaryKey(), userId, isClassicRule);
+        this.logger.LogPerudoInitSessionOk(this.GetPrimaryKey(), userId, maxPlayer, isClassicRule);
         
         return Task.FromResult(InitSessionResult.Ok);
     }
@@ -152,18 +181,18 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
 
         if (pickRandomFirstPlayer)
         {
-            this.State.CurrentTurn = alivePlayers![Random.Shared.Next(0, alivePlayers.Count)];
+            this.currentTurnNode = alivePlayers![Random.Shared.Next(0, alivePlayers.Count)];
         }
         
-        this.logger.LogPerudoStartRound(this.GetPrimaryKey(), this.State.CurrentTurn!.Value.UserId);
+        this.logger.LogPerudoStartRound(this.GetPrimaryKey(), this.currentTurnNode!.Value.UserId);
 
         return Task.CompletedTask;
     }
 
     public class PlayerInfo
     {
-        public UserId UserId { get; init; }
-        public int[] Dices { get; private set; }
+        public UserId UserId { get; }
+        public int[] Dices { get; }
         public int Life { get; set; }
 
         public bool IsAlive => 0 < this.Life;
@@ -196,8 +225,8 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
 public static partial class Log
 {
     [LoggerMessage(LogLevel.Information,
-        Message = "Session {session} initialized by {userId} [isClassicRule : {isClassicRule}]")]
-    public static partial void LogPerudoInitSessionOk(this ILogger logger, Guid session, UserId userId, bool isClassicRule);
+        Message = "Session {session} initialized by {userId} [maxPlayer : {maxPlayer}, isClassicRule : {isClassicRule}]")]
+    public static partial void LogPerudoInitSessionOk(this ILogger logger, Guid session, UserId userId, int maxPlayer, bool isClassicRule);
     
     [LoggerMessage(LogLevel.Information,
         Message = "New round started from {session} [firstPlayer : {firstUserId}]")]

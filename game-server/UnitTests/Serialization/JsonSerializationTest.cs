@@ -34,8 +34,8 @@ public class JsonSerializationTest
         var json = JsonSerializer.Serialize(list, options);
         var converted = JsonSerializer.Deserialize<LinkedList<T>>(json, options);
         
-        Assert.IsNotNull(converted, "JSON 변환 이후 NULL이 되면 안 됩니다.");
-        MyAssert.AreSequenceEquals(list, converted, "JSON 변환 이후 크기나 내용이 달라지면 안 됩니다.");
+        Assert.IsNotNull(converted, "JSON 변환 이후 NULL이 되면 안됩니다.");
+        MyAssert.AreSequenceEquals(list, converted, "JSON 변환 이후 크기나 내용이 달라지면 안됩니다.");
     }
 
     [TestMethod]
@@ -55,9 +55,9 @@ public class JsonSerializationTest
         var serialized = serializer.Serialize(state);
         var deserialized = serializer.Deserialize<TestState>(serialized);
         
-        Assert.IsNotNull(deserialized, "역직렬화 이후에 NULL이 되면 안 됩니다.");
-        Assert.AreEqual(state.ValueType, deserialized.ValueType, "역직렬화 이후에 ValueType 값이 달라지면 안 됩니다.");
-        Assert.AreEqual(state.ReferenceType, deserialized.ReferenceType, "역직렬화 이후에 ReferenceType 값이 달라지면 안 됩니다.");
-        MyAssert.AreSequenceEquals(state.TestDataList, deserialized.TestDataList, "역직렬화 이후에 LinkedList<T> 값이 달라지면 안 됩니다.");
+        Assert.IsNotNull(deserialized, "역직렬화 이후에 NULL이 되면 안됩니다.");
+        Assert.AreEqual(state.ValueType, deserialized.ValueType, "역직렬화 이후에 ValueType 값이 달라지면 안됩니다.");
+        Assert.AreEqual(state.ReferenceType, deserialized.ReferenceType, "역직렬화 이후에 ReferenceType 값이 달라지면 안됩니다.");
+        MyAssert.AreSequenceEquals(state.TestDataList, deserialized.TestDataList, "역직렬화 이후에 LinkedList<T> 값이 달라지면 안됩니다.");
     }
 }

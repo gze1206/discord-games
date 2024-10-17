@@ -25,4 +25,10 @@
       <ProjectReference Include="..\Server\Server.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Include="..\GlobalUsings.cs">
+        <Link>GlobalUsings.cs</Link>
+      </Compile>
+    </ItemGroup>
+
 </Project>
