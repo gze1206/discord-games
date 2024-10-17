@@ -21,8 +21,8 @@ jobs:
       run: dotnet restore
       working-directory: ${{ env.working-directory }}
     - name: Build
-      run: dotnet build --no-restore --output ./output
+      run: dotnet build --no-restore
       working-directory: ${{ env.working-directory }}
     - name: Test
-      run: dotnet test --verbosity normal
+      run: dotnet test --no-build --verbosity normal
       working-directory: ${{ env.working-directory }}
