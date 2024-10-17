@@ -1,0 +1,50 @@
+name: Server
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      working-directory: ./game-server
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+      working-directory: ${{ env.working-directory }}
+    - name: Build
+      run: dotnet build --no-restore --output ./output
+      working-directory: ${{ env.working-directory }}
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-output
+        path: ${{ env.working-directory }}/output
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      working-directory: ./game-server
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: build-output
+        path: ${{ env.working-directory }}/output
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+      working-directory: ${{ env.working-directory }}
