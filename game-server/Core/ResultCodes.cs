@@ -2,6 +2,14 @@
 
 #region GameSession Grain Results
 
+public enum InitSessionResult
+{
+    Ok,
+    
+    AlreadyInitialized = -1,
+    AlreadyStarted = -2,
+}
+
 public enum JoinPlayerResult
 {
     Ok,

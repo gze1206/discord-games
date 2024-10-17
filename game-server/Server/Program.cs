@@ -1,6 +1,8 @@
 ﻿using System.Net;
+using DiscordGames.Grain.Implements.GameSessions;
 using DiscordGames.Server;
 using DiscordGames.Server.Net;
+using DiscordGames.Server.Serialization.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -16,9 +18,14 @@ try
     var builder = Host.CreateDefaultBuilder(args)
         .UseOrleans(silo =>
         {
+            var jsonConvert = new CustomJsonConvertBuilder()
+                .Add<LinkedListJsonConverter<PerudoSessionGrain.PlayerInfo>>();
+            
             silo.UseLocalhostClustering();
 
-            silo.UseDashboard(options => options.HostSelf = true);
+            silo
+                .AddCustomJsonSerializer(jsonConvert)
+                .UseDashboard(options => options.HostSelf = true);
         })
         .UseConsoleLifetime();
 
@@ -29,7 +36,7 @@ try
     using var host = builder.Build();
 
     ServiceLocator.GrainFactory = host.Services.GetRequiredService<IGrainFactory>();
-    Console.WriteLine("WebSocket Listening on {0}:{1}...", webSocketServer.Address ?? IPAddress.Loopback, webSocketServer.Port);
+    Console.WriteLine("WebSocket Listening on {0}:{1}...", webSocketServer.Address ?? IPAddress.Loopback, webSocketServer.Port.ToString());
 
     await host.RunAsync();
 }
