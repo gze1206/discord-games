@@ -1,5 +1,8 @@
 using System.Text;
 using DiscordGames.Core.Net;
+using DiscordGames.Core.Net.Message;
+using UnitTests.TestClasses;
+
 // ReSharper disable StringLiteralTypo
 
 namespace UnitTests.Serialization;
@@ -20,5 +23,41 @@ public class MessageSerializationCoreTest
     {
         var actual = MessageSerializer.CalcChecksum(Encoding.ASCII.GetBytes(source));
         Assert.AreEqual(expected, actual);
+    }
+
+    [TestMethod]
+    public async Task SerializeTest()
+    {
+        var handler = new PingTestHandler();
+
+        var expected = new PingMessage
+        {
+            Header = new MessageHeader(1, MessageChannel.Global, MessageType.Ping),
+            UtcTicks = DateTime.UtcNow.Ticks
+        };
+
+        var binary = expected.Write();
+        MessageSerializer.Read(binary, handler);
+
+        var isSucceed = await handler.Wait();
+        Assert.IsTrue(isSucceed, "메시지 역직렬화에 성공해야 합니다");
+        Assert.AreEqual(expected, handler.Actual);
+    }
+
+    private class PingTestHandler : TestVirtualMessageHandler
+    {
+        private readonly TaskCompletionSource<bool> pingReceived = new();
+        
+        public PingMessage Actual { get; private set; }
+        
+        public override Task OnPing(PingMessage message)
+        {
+            this.pingReceived.SetResult(true);
+            this.Actual = message;
+            return base.OnPing(message);
+        }
+
+        public async Task<bool> Wait()
+            => await Task.WhenAny(this.pingReceived.Task, Task.Delay(1000)) == this.pingReceived.Task;
     }
 }
