@@ -35,14 +35,11 @@ public static partial class MessageSerializer
         var type = (MessageType)data[1];
         var checksum = BitConverter.ToUInt32(data[2..6]);
 
-        const int payloadBeginAt = MessageHeader.HeaderSize + 1;
+        const int payloadBeginAt = MessageHeader.HeaderSize;
         var actualChecksum = CalcChecksum(data[payloadBeginAt..]);
         if (checksum != actualChecksum) throw InvalidMessageChecksumException.I;
         
-        var header = new MessageHeader(version, channel, type)
-        {
-            Checksum = checksum
-        };
+        var header = new MessageHeader(version, channel, type);
 
         switch (type)
         {
@@ -63,7 +60,7 @@ public static partial class MessageSerializer
         buffer[0] |= (byte)(~VersionMask & (byte)message.Header.Channel);
         buffer[1] = (byte)message.Header.MessageType;
         
-        const int payloadBeginAt = MessageHeader.HeaderSize + 1;
+        const int payloadBeginAt = MessageHeader.HeaderSize;
 
         // Payload
         BitConverter.TryWriteBytes(buffer[(payloadBeginAt + 0)..(payloadBeginAt + 8)], message.UtcTicks);
