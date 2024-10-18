@@ -20,8 +20,9 @@ public class PerudoSessionState
     [Id(6)] public bool IsClassicRule { get; internal set; }
     [Id(7)] public int MaxPlayer { get; internal set; } = DefaultMaxPlayer;
     [Id(8)] public int CurrentTurn { get; internal set; } = -1;
-    [Id(9)] public int LastBidQuantity { get; internal set; } = -1;
-    [Id(10)] public int LastBidFace { get; internal set; } = -1;
+    [Id(9)] public UserId LastBidUserId { get; internal set; } = -1;
+    [Id(10)] public int LastBidQuantity { get; internal set; } = -1;
+    [Id(11)] public int LastBidFace { get; internal set; } = -1;
 
     public PerudoSessionState()
     {
@@ -37,6 +38,7 @@ public class PerudoSessionState
         bool isClassicRule,
         int maxPlayer,
         int currentTurn,
+        UserId lastBidUserId,
         int lastBidQuantity,
         int lastBidFace)
     {
@@ -49,6 +51,7 @@ public class PerudoSessionState
         this.IsClassicRule = isClassicRule;
         this.MaxPlayer = maxPlayer;
         this.CurrentTurn = currentTurn;
+        this.LastBidUserId = lastBidUserId;
         this.LastBidQuantity = lastBidQuantity;
         this.LastBidFace = lastBidFace;
     }

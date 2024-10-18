@@ -1,4 +1,4 @@
-﻿using DiscordGames.Core;
+﻿using DiscordGames.Core.ResultCodes.CommonSession;
 using Microsoft.Extensions.Logging;
 
 namespace DiscordGames.Grain.Interfaces.GameSessions;

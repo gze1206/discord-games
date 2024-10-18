@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Serialization;
-using DiscordGames.Core;
+using DiscordGames.Core.ResultCodes.CommonSession;
+using DiscordGames.Core.ResultCodes.PerudoSession;
 using DiscordGames.Grain.Interfaces.GameSessions;
 using DiscordGames.Grain.States;
 using Microsoft.Extensions.Logging;
@@ -14,6 +15,7 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
     private readonly ILogger<PerudoSessionGrain> logger;
 
     private PlayerInfo? currentTurnInfo;
+    private PlayerInfo? lastBidderInfo;
     private int totalDices;
 
     public PerudoSessionGrain(ILogger<PerudoSessionGrain> logger)
@@ -39,7 +41,12 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
             {
                 if (!player.IsAlive) continue;
 
-                this.totalDices += player.Dices.Length;
+                if (player.UserId == this.State.LastBidUserId)
+                {
+                    this.lastBidderInfo = player;
+                }
+                
+                this.totalDices += player.Dices.Count;
             }
         }
     }
@@ -88,10 +95,12 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
         // 플레이 중일 때의 플레이어 이탈 처리
         if (this.State.IsPlaying)
         {
-            this.State.TurnOrder.RemoveAll(x => x.UserId == userId);
-            
-            //TODO: 이탈 유저 탈락 처리
-            await this.StartRound(true);
+            var userInfo = this.State.TurnOrder.Find(x => x.UserId == userId);
+
+            if (userInfo != null)
+            {
+                await this.ProcessDropout(userInfo);
+            }
         }
         
         this.logger.LogLeavePlayerOk(this.GetPrimaryKey(), userId);
@@ -181,14 +190,69 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
             if (quantity <= lastQuantity) return Task.FromResult(PlaceBidResult.CannotLowerQuantityBid);
         }
 
+        this.State.LastBidUserId = userId;
         this.State.LastBidQuantity = quantity;
         this.State.LastBidFace = face;
         this.State.CurrentTurn = (this.State.CurrentTurn + 1) % this.State.TurnOrder.Count;
+        this.lastBidderInfo = this.currentTurnInfo;
         this.currentTurnInfo = this.State.TurnOrder[this.State.CurrentTurn];
 
         this.logger.LogPerudoPlaceBidOk(this.GetPrimaryKey(), userId, lastQuantity, lastFace, quantity, face);
         
         return Task.FromResult(PlaceBidResult.Ok);
+    }
+
+    public async Task<ChallengeResult> Challenge(UserId userId)
+    {
+        var lastBidder = this.State.LastBidUserId;
+        using var logScope = this.logger.BeginScope("Perudo/Challenge");
+        if (!this.State.IsPlaying) return ChallengeResult.NotStartedGame;
+        if (lastBidder < 0 || this.lastBidderInfo == null) return ChallengeResult.NoPreviousBid;
+        if (this.currentTurnInfo?.UserId != userId) return ChallengeResult.NotFromCurrentTurnUser;
+
+        if (!this.currentTurnInfo.IsAlive) throw new InvalidOperationException("탈락자의 턴이 진행 중입니다");
+
+        var lastBidQuantity = this.State.LastBidQuantity;
+        var face = this.State.LastBidFace;
+
+        var actualQuantity = 0;
+        foreach (var player in this.State.TurnOrder)
+        {
+            foreach (var die in player.Dices)
+            {
+                if (die != face) continue;
+                actualQuantity++;
+            }
+        }
+
+        // 선언이 유효하지 않았으면 선언자, 선언이 유효했으면 도전자의 패배입니다
+        var loser = lastBidQuantity < actualQuantity
+            ? this.lastBidderInfo!
+            : this.currentTurnInfo!;
+
+        loser.Life--;
+        if (this.State.IsClassicRule) loser.Dices.RemoveLast();
+
+        if (!loser.IsAlive)
+        {
+            await this.ProcessDropout(loser);
+        }
+        else
+        {
+            this.State.CurrentTurn = this.State.TurnOrder.IndexOf(loser);
+            this.currentTurnInfo = loser;
+            await this.StartRound();
+        }
+
+        this.logger.LogPerudoChallengeOk(this.GetPrimaryKey(), userId, lastBidder, lastBidQuantity, face, actualQuantity);
+        
+        return ChallengeResult.Ok;
+    }
+
+    private async Task ProcessDropout(PlayerInfo dropout)
+    {
+        this.State.TurnOrder.Remove(dropout);
+        await this.StartRound(pickRandomFirstPlayer: true);
     }
 
     private Task StartRound(bool pickRandomFirstPlayer = false)
@@ -201,8 +265,10 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
             this.currentTurnInfo = this.State.TurnOrder[this.State.CurrentTurn];
         }
 
+        this.State.LastBidUserId = -1;
         this.State.LastBidQuantity = -1;
         this.State.LastBidFace = -1;
+        this.lastBidderInfo = null;
         
         this.logger.LogPerudoStartRound(this.GetPrimaryKey(), this.currentTurnInfo?.UserId ?? throw new InvalidOperationException("생존한 플레이어가 없습니다"));
 
@@ -212,20 +278,22 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
     public class PlayerInfo
     {
         public UserId UserId { get; }
-        public int[] Dices { get; }
+        public LinkedList<int> Dices { get; }
         public int Life { get; set; }
 
         public bool IsAlive => 0 < this.Life;
 
+        private static readonly int[] InitDices = { 0, 0, 0, 0, 0 };
+
         public PlayerInfo(UserId userId, int initLife)
         {
             this.UserId = userId;
-            this.Dices = new int[5];
+            this.Dices = new LinkedList<int>(InitDices);
             this.Life = initLife;
         }
 
         [JsonConstructor]
-        public PlayerInfo(UserId userId, int[] dices, int life)
+        public PlayerInfo(UserId userId, LinkedList<int> dices, int life)
         {
             this.UserId = userId;
             this.Dices = dices;
@@ -234,9 +302,9 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
 
         public void Roll()
         {
-            for (int i = 0, len = this.Dices.Length; i < len; i++)
+            for (var node = this.Dices.First; node?.Next != null; node = node.Next)
             {
-                this.Dices[i] = Random.Shared.Next(1, 7);
+                node.ValueRef = Random.Shared.Next(1, 7);
             }
         }
     }
@@ -255,4 +323,8 @@ public static partial class Log
     [LoggerMessage(LogLevel.Information,
         Message = "Player {userId} placed bid from {session} [lastBid : ({lastQuantity}, {lastFace}), newBid : ({quantity}, {face})]")]
     public static partial void LogPerudoPlaceBidOk(this ILogger logger, Guid session, UserId userId, int lastQuantity, int lastFace, int quantity, int face);
+    
+    [LoggerMessage(LogLevel.Information,
+        Message = "Player {userId} challenged to {bidder} from {session} [lastBid : ({lastQuantity}, {lastFace}), actualQuantity : {actualQuantity}]")]
+    public static partial void LogPerudoChallengeOk(this ILogger logger, Guid session, UserId userId, UserId bidder, int lastQuantity, int lastFace, int actualQuantity);
 }
