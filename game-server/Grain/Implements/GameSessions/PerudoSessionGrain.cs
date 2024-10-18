@@ -152,7 +152,7 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
             .Select(playerUserId => new PlayerInfo(playerUserId, initLife)));
 
         this.State.IsPlaying = true;
-        await this.StartRound();
+        await this.StartRound(true);
         
         this.logger.LogStartGameOk(this.GetPrimaryKey(), userId);
         
