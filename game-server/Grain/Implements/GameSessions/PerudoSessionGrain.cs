@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
-using DiscordGames.Core.ResultCodes.CommonSession;
-using DiscordGames.Core.ResultCodes.PerudoSession;
+using DiscordGames.Grain.ResultCodes.CommonSession;
+using DiscordGames.Grain.ResultCodes.PerudoSession;
 using DiscordGames.Grain.Interfaces.GameSessions;
 using DiscordGames.Grain.States;
 using Microsoft.Extensions.Logging;

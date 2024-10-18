@@ -6,7 +6,7 @@ using UnitTests.Utils;
 
 namespace UnitTests.Serialization;
 
-[TestClass, TestCategory("Serialization")]
+[TestClass, TestCategory("Serialization"), TestCategory("Grain")]
 public class GrainStateSerializationTest
 {
     private IGrainStorageSerializer serializer = default!;

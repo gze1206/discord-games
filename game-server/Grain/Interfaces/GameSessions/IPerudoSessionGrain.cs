@@ -1,4 +1,4 @@
-﻿using DiscordGames.Core.ResultCodes.PerudoSession;
+﻿using DiscordGames.Grain.ResultCodes.PerudoSession;
 using DiscordGames.Grain.States;
 
 namespace DiscordGames.Grain.Interfaces.GameSessions;

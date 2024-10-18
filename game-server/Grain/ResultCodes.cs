@@ -1,5 +1,5 @@
 ﻿// ReSharper disable once CheckNamespace
-namespace DiscordGames.Core.ResultCodes
+namespace DiscordGames.Grain.ResultCodes
 {
     namespace CommonSession
     {

@@ -5,7 +5,7 @@ using UnitTests.Utils;
 
 namespace UnitTests.Serialization;
 
-[TestClass, TestCategory("Serialization")]
+[TestClass, TestCategory("Serialization"), TestCategory("Grain")]
 public class JsonSerializationTest
 {
     private static readonly TestData[] TestDataArray =
