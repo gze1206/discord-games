@@ -17,7 +17,8 @@ try
     var builder = Host.CreateDefaultBuilder(args)
         .UseOrleans(silo =>
         {
-            var jsonConvert = new CustomJsonConvertBuilder();
+            var jsonConvert = new CustomJsonConvertBuilder()
+                .Add<LinkedListJsonConverter<int>>();
             
             silo.UseLocalhostClustering();
 
