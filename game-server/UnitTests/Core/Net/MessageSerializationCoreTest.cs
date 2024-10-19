@@ -55,11 +55,9 @@ public class MessageSerializationCoreTest
         // Arrange
         var handler = new PingTestHandler();
 
-        var expected = new PingMessage
-        {
-            Header = new MessageHeader(1, MessageChannel.Global, MessageType.Ping),
-            UtcTicks = DateTime.UtcNow.Ticks,
-        };
+        var expected = new PingMessage(
+            new MessageHeader(1, MessageChannel.Global, MessageType.Ping),
+            DateTime.UtcNow.Ticks);
 
         // Act
         var binary = expected.Write();
@@ -76,16 +74,12 @@ public class MessageSerializationCoreTest
     public void MessageSerializer__서로_다른_메시지를_직렬화하여_비교__불일치()
     {
         // Arrange
-        var a = new PingMessage
-        {
-            Header = new MessageHeader(1, MessageChannel.Global, MessageType.Ping),
-            UtcTicks = DateTime.UtcNow.Ticks - 5,
-        };
-        var b = new PingMessage
-        {
-            Header = new MessageHeader(1, MessageChannel.Global, MessageType.Ping),
-            UtcTicks = DateTime.UtcNow.Ticks + 5,
-        };
+        var a = new PingMessage(
+            new MessageHeader(1, MessageChannel.Global, MessageType.Ping),
+            DateTime.UtcNow.Ticks - 5);
+        var b = new PingMessage(
+            new MessageHeader(1, MessageChannel.Global, MessageType.Ping),
+            DateTime.UtcNow.Ticks + 5);
         
         // Act
         var binA = a.Write();
@@ -99,11 +93,9 @@ public class MessageSerializationCoreTest
     public void MessageSerializer__같은_메시지를_두_번_직렬화하여_비교__일치()
     {
         // Arrange
-        var message = new PingMessage
-        {
-            Header = new MessageHeader(1, MessageChannel.Global, MessageType.Ping),
-            UtcTicks = DateTime.UtcNow.Ticks,
-        };
+        var message = new PingMessage(
+            new MessageHeader(1, MessageChannel.Global, MessageType.Ping),
+            DateTime.UtcNow.Ticks);
         
         // Act
         var binA = message.Write();

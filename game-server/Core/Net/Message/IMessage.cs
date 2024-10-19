@@ -1,6 +1,8 @@
-namespace DiscordGames.Core.Net.Message;
-
-public interface IMessage
+namespace DiscordGames.Core.Net.Message
 {
-    MessageHeader Header { get; }
+    public interface IMessage
+    {
+        MessageHeader Header { get; }
+    }
 }
+

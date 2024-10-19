@@ -1,11 +1,15 @@
-namespace DiscordGames.Core;
+using System;
 
-public abstract class ExceptionWithInstance<T> : Exception
-    where T : ExceptionWithInstance<T>, new()
+namespace DiscordGames.Core
 {
-    protected ExceptionWithInstance() { }
-    protected ExceptionWithInstance(string message) : base(message) { }
+    public abstract class ExceptionWithInstance<T> : Exception
+        where T : ExceptionWithInstance<T>, new()
+    {
+        protected ExceptionWithInstance() { }
+        protected ExceptionWithInstance(string message) : base(message) { }
 
-    private static Lazy<T> Lazy { get; } = new();
-    public static T I => Lazy.Value;
+        private static Lazy<T> Lazy { get; } = new();
+        public static T I => Lazy.Value;
+    }
 }
+

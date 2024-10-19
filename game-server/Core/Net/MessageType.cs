@@ -1,7 +1,8 @@
-namespace DiscordGames.Core.Net;
-
-public enum MessageType : byte
+namespace DiscordGames.Core.Net
 {
-    Greeting,
-    Ping,
+    public enum MessageType : byte
+    {
+        Greeting,
+        Ping,
+    }
 }
