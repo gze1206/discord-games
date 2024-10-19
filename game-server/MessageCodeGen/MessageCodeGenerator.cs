@@ -53,6 +53,7 @@ public partial class MessageCodeGenerator : ISourceGenerator
 
     private static int? SizeOf(string typeName) => typeName switch
     {
+        "Int32" => sizeof(int),
         "Int64" => sizeof(long),
         _ => null
     };

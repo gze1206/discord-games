@@ -53,7 +53,7 @@ public partial class MessageCodeGenerator
     {
         var (messageTypeName, messageName) = GetNames(message);
         writer.Write($"case MessageType.{messageName}:");
-        using (writer.BeginIndent())
+        using (writer.BeginBlock())
         {
             var parameters = message.Constructors.First().Parameters;
             var args = new List<string>(parameters.Length);
