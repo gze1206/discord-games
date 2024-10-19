@@ -39,7 +39,7 @@ public partial class MessageCodeGenerator : ISourceGenerator
 
         context.AddSource("Message.g.cs", SourceText.From(messagePartials.ToString(), Encoding.UTF8));
         context.AddSource("MessageHandler.g.cs", SourceText.From(handler.ToString(), Encoding.UTF8));
-        context.AddSource("MessageSerializer.Read.g.cs", SourceText.From(serializerWrite.ToString(), Encoding.UTF8));
+        context.AddSource("MessageSerializer.Read.g.cs", SourceText.From(serializerRead.ToString(), Encoding.UTF8));
         context.AddSource("MessageSerializer.Write.g.cs", SourceText.From(serializerWrite.ToString(), Encoding.UTF8));
     }
 
