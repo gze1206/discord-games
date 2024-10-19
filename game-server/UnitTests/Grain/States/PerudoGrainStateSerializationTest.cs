@@ -1,26 +1,22 @@
 using DiscordGames.Grain.Implements.GameSessions;
 using DiscordGames.Grain.States;
 using DiscordGames.Server.Serialization.Json;
-using Orleans.Storage;
 using UnitTests.Utils;
 
-namespace UnitTests.Serialization;
+namespace UnitTests.Grain.States;
 
 [TestClass, TestCategory("Serialization"), TestCategory("Grain")]
-public class GrainStateSerializationTest
+public class PerudoGrainStateSerializationTest
 {
-    private IGrainStorageSerializer serializer = default!;
+    private CustomJsonGrainStorageSerializer serializer = default!;
 
     [TestInitialize]
     public void Init()
     {
-        this.serializer = new CustomJsonGrainStorageSerializer(new CustomJsonConvertBuilder()
-            .Add<LinkedListJsonConverter<int>>()
-            .BakeOptions());
+        this.serializer = Globals.Serializer();
     }
 
-    [TestMethod]
-    public void PerudoSessionStateTest()
+    private static PerudoSessionState GenState(int value)
     {
         var players = new HashSet<UserId>
         {
@@ -36,7 +32,7 @@ public class GrainStateSerializationTest
             IsClassicRule = false,
             CurrentTurn = 0,
             LastBidUserId = players.Count - 1,
-            LastBidQuantity = 4,
+            LastBidQuantity = value,
             LastBidFace = 3,
         };
 
@@ -49,9 +45,20 @@ public class GrainStateSerializationTest
             state.TurnOrder.Add(info);
         }
 
+        return state;
+    }
+
+    [TestMethod]
+    public void PerudoSessionState_SerializeAndDeserialize_AreEqual()
+    {
+        // Arrange
+        var state = GenState(4);
+
+        // Act
         var serialized = this.serializer.Serialize(state);
         var deserialized = this.serializer.Deserialize<PerudoSessionState>(serialized);
         
+        // Assert
         Assert.IsNotNull(deserialized, "역직렬화 결과가 NULL이면 안됩니다.");
         MyAssert.AreSequenceEquals(state.Players, deserialized.Players, "역직렬화 이후 플레이어 목록이 바뀌면 안됩니다.");
         MyAssert.AreSequenceEquals(state.Spectators, deserialized.Spectators, "역직렬화 이후 관전자 목록이 바뀌면 안됩니다.");
@@ -71,5 +78,44 @@ public class GrainStateSerializationTest
             Assert.AreEqual(expected.Life, actual.Life, "역직렬화 이후 턴 순서 정보 중 라이프가 바뀌면 안됩니다.");
             MyAssert.AreSequenceEquals(expected.Dices, actual.Dices, "역직렬화 이후 턴 순서 정보 중 주사위 상태가 바뀌면 안됩니다.");
         }, "역직렬화 이후 턴 순서 정보가 바뀌면 안됩니다.");
+    }
+
+    [TestMethod]
+    [DataRow(4, DisplayName = "Sample 1")]
+    [DataRow(5, DisplayName = "Sample 2")]
+    [DataRow(6, DisplayName = "Sample 3")]
+    [DataRow(7, DisplayName = "Sample 4")]
+    [DataRow(8, DisplayName = "Sample 5")]
+    public void PerudoSessionState_CompareBinaries_AreEqual(int quantity)
+    {
+        // Arrange
+        var state = GenState(4);
+        
+        // Act
+        var binA = this.serializer.Serialize(state);
+        var binB = this.serializer.Serialize(state);
+        
+        // Assert
+        MyAssert.AreSequenceEquals(binA?.ToArray(), binB?.ToArray(), "같은 State를 직렬화하면 같은 바이너리가 나와야 합니다.");
+    }
+    
+    [TestMethod]
+    [DataRow(4, 5, DisplayName = "Sample 1")]
+    [DataRow(4, 6, DisplayName = "Sample 2")]
+    [DataRow(4, 7, DisplayName = "Sample 3")]
+    [DataRow(4, 8, DisplayName = "Sample 4")]
+    [DataRow(4, 9, DisplayName = "Sample 5")]
+    public void PerudoSessionState_CompareBinaries_AreNotEqual(int quantityA, int quantityB)
+    {
+        // Arrange
+        var a = GenState(quantityA);
+        var b = GenState(quantityB);
+        
+        // Act
+        var binA = this.serializer.Serialize(a);
+        var binB = this.serializer.Serialize(b);
+        
+        // Assert
+        MyAssert.AreSequenceNotEquals(binA?.ToArray(), binB?.ToArray(), "다른 값을 가진 State를 직렬화하면 다른 바이너리가 나와야 합니다.");
     }
 }

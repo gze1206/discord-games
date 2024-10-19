@@ -1,6 +1,7 @@
 using DiscordGames.Core.Net;
 using DiscordGames.Core.Net.Message;
 
+// ReSharper disable once CheckNamespace
 namespace UnitTests.TestClasses;
 
 public class TestVirtualMessageHandler : IMessageHandler

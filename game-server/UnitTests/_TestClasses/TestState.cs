@@ -1,12 +1,13 @@
 using System.Diagnostics.CodeAnalysis;
 
+// ReSharper disable once CheckNamespace
 namespace UnitTests.TestClasses;
 
 public class TestState
 {
-    public int ValueType { get; set; }
-    public string ReferenceType { get; set; } = default!;
-    public LinkedList<TestData> TestDataList { get; set; } = new();
+    public int ValueType { get; init; }
+    public string ReferenceType { get; init; } = default!;
+    public LinkedList<TestData> TestDataList { get; init; } = new();
 }
 
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
