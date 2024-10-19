@@ -49,7 +49,7 @@ public class PerudoGrainStateSerializationTest
     }
 
     [TestMethod]
-    public void PerudoSessionState_SerializeAndDeserialize_AreEqual()
+    public void PerudoSessionState__직렬화_후_다시_역직렬화하여_원본과_비교__일치()
     {
         // Arrange
         var state = GenState(4);
@@ -81,12 +81,12 @@ public class PerudoGrainStateSerializationTest
     }
 
     [TestMethod]
-    [DataRow(4, DisplayName = "Sample 1")]
-    [DataRow(5, DisplayName = "Sample 2")]
-    [DataRow(6, DisplayName = "Sample 3")]
-    [DataRow(7, DisplayName = "Sample 4")]
-    [DataRow(8, DisplayName = "Sample 5")]
-    public void PerudoSessionState_CompareBinaries_AreEqual(int quantity)
+    [DataRow(4, DisplayName = "PerudoSessionState__같은_데이터를_두_번_직렬화하여_비교 - Sample 1")]
+    [DataRow(5, DisplayName = "PerudoSessionState__같은_데이터를_두_번_직렬화하여_비교 - Sample 2")]
+    [DataRow(6, DisplayName = "PerudoSessionState__같은_데이터를_두_번_직렬화하여_비교 - Sample 3")]
+    [DataRow(7, DisplayName = "PerudoSessionState__같은_데이터를_두_번_직렬화하여_비교 - Sample 4")]
+    [DataRow(8, DisplayName = "PerudoSessionState__같은_데이터를_두_번_직렬화하여_비교 - Sample 5")]
+    public void PerudoSessionState__같은_데이터를_두_번_직렬화하여_비교__일치(int quantity)
     {
         // Arrange
         var state = GenState(4);
@@ -96,16 +96,16 @@ public class PerudoGrainStateSerializationTest
         var binB = this.serializer.Serialize(state);
         
         // Assert
-        MyAssert.AreSequenceEquals(binA?.ToArray(), binB?.ToArray(), "같은 State를 직렬화하면 같은 바이너리가 나와야 합니다.");
+        MyAssert.AreSequenceEquals(binA.ToArray(), binB.ToArray(), "같은 State를 직렬화하면 같은 바이너리가 나와야 합니다.");
     }
     
     [TestMethod]
-    [DataRow(4, 5, DisplayName = "Sample 1")]
-    [DataRow(4, 6, DisplayName = "Sample 2")]
-    [DataRow(4, 7, DisplayName = "Sample 3")]
-    [DataRow(4, 8, DisplayName = "Sample 4")]
-    [DataRow(4, 9, DisplayName = "Sample 5")]
-    public void PerudoSessionState_CompareBinaries_AreNotEqual(int quantityA, int quantityB)
+    [DataRow(4, 5, DisplayName = "PerudoSessionState__서로_다른_데이터를_직렬화하여_비교 - Sample 1")]
+    [DataRow(4, 6, DisplayName = "PerudoSessionState__서로_다른_데이터를_직렬화하여_비교 - Sample 2")]
+    [DataRow(4, 7, DisplayName = "PerudoSessionState__서로_다른_데이터를_직렬화하여_비교 - Sample 3")]
+    [DataRow(4, 8, DisplayName = "PerudoSessionState__서로_다른_데이터를_직렬화하여_비교 - Sample 4")]
+    [DataRow(4, 9, DisplayName = "PerudoSessionState__서로_다른_데이터를_직렬화하여_비교 - Sample 5")]
+    public void PerudoSessionState__서로_다른_데이터를_직렬화하여_비교__불일치(int quantityA, int quantityB)
     {
         // Arrange
         var a = GenState(quantityA);

@@ -16,19 +16,19 @@ public class JsonSerializationTest
     };
     
     [TestMethod]
-    public void LinkedListConverter_IntSerializeAndDeserialize_AreEqual()
+    public void LinkedListConverter__정수형_링크드리스트_직렬화_후_다시_역직렬화하여_원본과_비교__일치()
     {
         LinkedListConverterEqualTest(1, 2, 3);
     }
     
     [TestMethod]
-    public void LinkedListConverter_StringSerializeAndDeserialize_AreEqual()
+    public void LinkedListConverter__문자열_링크드리스트_직렬화_후_다시_역직렬화하여_원본과_비교__일치()
     {
         LinkedListConverterEqualTest("A", "B", "C");
     }
     
     [TestMethod]
-    public void LinkedListConverter_RecordSerializeAndDeserialize_AreEqual()
+    public void LinkedListConverter__레코드_링크드리스트_직렬화_후_다시_역직렬화하여_원본과_비교__일치()
     {
         LinkedListConverterEqualTest(TestDataArray);
     }
@@ -52,22 +52,21 @@ public class JsonSerializationTest
     }
 
     [TestMethod]
-    [DataRow(new[] { 1 }, DisplayName = "Sample 1")]
-    [DataRow(new[] { 1, 2, 3 }, DisplayName = "Sample 2")]
-    [DataRow(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 }, DisplayName = "Sample 3")]
-    public void LinkedListConverter_CompareJson_AreEqual(int[] a)
+    [DataRow(new[] { 1 }, DisplayName = "LinkedListConverter__같은_데이터를_두_번_직렬화하여_비교 - Sample 1")]
+    [DataRow(new[] { 1, 2, 3 }, DisplayName = "LinkedListConverter__같은_데이터를_두_번_직렬화하여_비교 - Sample 2")]
+    [DataRow(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 }, DisplayName = "LinkedListConverter__같은_데이터를_두_번_직렬화하여_비교 - Sample 3")]
+    public void LinkedListConverter__같은_데이터를_두_번_직렬화하여_비교__일치(int[] a)
     {
         // Arrange
         var options = new CustomJsonConvertBuilder()
             .Add<LinkedListJsonConverter<int>>()
             .BakeOptions();
 
-        var listA = new LinkedList<int>(a);
-        var listB = new LinkedList<int>(a);
+        var list = new LinkedList<int>(a);
         
         // Act
-        var jsonA = JsonSerializer.Serialize(listA, options);
-        var jsonB = JsonSerializer.Serialize(listB, options);
+        var jsonA = JsonSerializer.Serialize(list, options);
+        var jsonB = JsonSerializer.Serialize(list, options);
 
         // Assert
         Assert.AreEqual(jsonA, jsonB);
@@ -77,19 +76,19 @@ public class JsonSerializationTest
     [DataRow(
         new[] { 1 },
         new[] { 2 },
-        DisplayName = "Sample 1"
+        DisplayName = "LinkedListConverter__서로_다른_데이터를_직렬화하여_비교 - Sample 1"
     )]
     [DataRow(
         new[] { 1, 2, 3 },
         new[] { 4, 5, 6 },
-        DisplayName = "Sample 2"
+        DisplayName = "LinkedListConverter__서로_다른_데이터를_직렬화하여_비교 - Sample 2"
     )]
     [DataRow(
         new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 },
         new[] { 9, 8, 7, 6, 5, 4, 3, 2, 1 },
-        DisplayName = "Sample 3"
+        DisplayName = "LinkedListConverter__서로_다른_데이터를_직렬화하여_비교 - Sample 3"
     )]
-    public void LinkedListConverter_CompareJson_AreNotEqual(int[] a, int[] b)
+    public void LinkedListConverter__서로_다른_데이터를_직렬화하여_비교__불일치(int[] a, int[] b)
     {
         // Arrange
         var options = new CustomJsonConvertBuilder()
@@ -108,7 +107,7 @@ public class JsonSerializationTest
     }
 
     [TestMethod]
-    public void CustomJsonGrainStorageSerializer_SerializeAndDeserialize_AreEqual()
+    public void CustomJsonGrainStorageSerializer__테스트_데이터_직렬화_후_다시_역직렬화하여_비교__일치()
     {
         // Arrange
         var state = new TestState
