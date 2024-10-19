@@ -10,6 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       working-directory: ./game-server
+    permissions:
+      id-token: write
+      contents: read
+      checks: write
 
     steps:
     - uses: actions/checkout@v4
@@ -24,5 +28,12 @@ jobs:
       run: dotnet build --no-restore
       working-directory: ${{ env.working-directory }}
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" || true
       working-directory: ${{ env.working-directory }}
+    - name: Test Repost
+      uses: dorny/test-reporter@v1
+      with:
+        name: DotNET Tests
+        path: "**/test-results.trx"
+        reporter: dotnet-trx
+        fail-on-error: true
