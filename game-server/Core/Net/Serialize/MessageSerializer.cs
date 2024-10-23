@@ -63,7 +63,7 @@ public static partial class MessageSerializer
         }
     }
 
-    public static byte[] Write(this PingMessage message)
+    public static byte[] Write(this ref PingMessage message)
     {
         var writer = new BufferWriter();
         writer.Write(message);
