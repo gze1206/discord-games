@@ -30,7 +30,7 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" || true
       working-directory: ${{ env.working-directory }}
-    - name: Test Repost
+    - name: Test Report
       uses: dorny/test-reporter@v1
       with:
         name: DotNET Tests
