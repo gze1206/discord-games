@@ -14,7 +14,7 @@ public unsafe struct BufferSegment
 
     public void Init()
     {
-        this.array = MemoryPool.I.Rent();
+        this.array = MemoryPool.I.Rent() ?? throw new InvalidOperationException("MemoryPool에서 바이트 배열을 얻지 못했습니다.");
     }
 
     public void Dispose()
