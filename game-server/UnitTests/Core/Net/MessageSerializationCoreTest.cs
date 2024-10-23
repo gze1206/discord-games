@@ -1,6 +1,7 @@
 using System.Text;
 using DiscordGames.Core.Net;
 using DiscordGames.Core.Net.Message;
+using DiscordGames.Core.Net.Serialize;
 using UnitTests.TestClasses;
 using UnitTests.Utils;
 
@@ -11,6 +12,12 @@ namespace UnitTests.Core.Net;
 [TestClass, TestCategory("Serialization"), TestCategory("Message")]
 public class MessageSerializationCoreTest
 {
+    [TestInitialize]
+    public void Init()
+    {
+        Globals.Init();
+    }
+    
     [TestMethod]
     [DataRow("123456789", 0xCBF43926U, DisplayName = "CalcChecksum__사전_계산된_Checksum과_비교 - Sample 1 - \"123456789\"")]
     [DataRow("TEST DATA", 0x560B9F59U, DisplayName = "CalcChecksum__사전_계산된_Checksum과_비교 - Sample 2 - \"TEST DATA\"")]
@@ -55,8 +62,9 @@ public class MessageSerializationCoreTest
         // Arrange
         var handler = new PingTestHandler();
 
+        var header = new MessageHeader(1, MessageChannel.Global, MessageType.Ping);
         var expected = new PingMessage(
-            new MessageHeader(1, MessageChannel.Global, MessageType.Ping),
+            ref header,
             DateTime.UtcNow.Ticks);
 
         // Act
@@ -74,11 +82,12 @@ public class MessageSerializationCoreTest
     public void MessageSerializer__서로_다른_메시지를_직렬화하여_비교__불일치()
     {
         // Arrange
+        var header = new MessageHeader(1, MessageChannel.Global, MessageType.Ping);
         var a = new PingMessage(
-            new MessageHeader(1, MessageChannel.Global, MessageType.Ping),
+            ref header,
             DateTime.UtcNow.Ticks - 5);
         var b = new PingMessage(
-            new MessageHeader(1, MessageChannel.Global, MessageType.Ping),
+            ref header,
             DateTime.UtcNow.Ticks + 5);
         
         // Act
@@ -93,8 +102,9 @@ public class MessageSerializationCoreTest
     public void MessageSerializer__같은_메시지를_두_번_직렬화하여_비교__일치()
     {
         // Arrange
+        var header = new MessageHeader(1, MessageChannel.Global, MessageType.Ping);
         var message = new PingMessage(
-            new MessageHeader(1, MessageChannel.Global, MessageType.Ping),
+            ref header,
             DateTime.UtcNow.Ticks);
         
         // Act

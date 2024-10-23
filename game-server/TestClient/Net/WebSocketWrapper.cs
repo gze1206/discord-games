@@ -1,5 +1,5 @@
 using DiscordGames.Core.Net;
-using DiscordGames.Core.Net.Message;
+using DiscordGames.Core.Net.Serialize;
 using WebSocketSharp;
 
 namespace TestClient.Net;

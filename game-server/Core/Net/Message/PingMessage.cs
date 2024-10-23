@@ -1,15 +1,15 @@
 namespace DiscordGames.Core.Net.Message
 {
-    public readonly partial struct PingMessage : IMessage
+    public readonly partial record struct PingMessage
     {
         public long UtcTicks { get; }
     }
     
-    public readonly partial struct PingMessage
+    public readonly partial record struct PingMessage
     {
         public MessageHeader Header { get; }
         
-        public PingMessage(MessageHeader Header, long UtcTicks)
+        public PingMessage(ref MessageHeader Header, long UtcTicks)
         {
             this.Header = Header;
             this.UtcTicks = UtcTicks;

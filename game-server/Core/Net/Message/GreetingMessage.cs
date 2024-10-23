@@ -1,12 +1,12 @@
 namespace DiscordGames.Core.Net.Message
 {
-    public readonly partial struct GreetingMessage : IMessage
+    public readonly partial record struct GreetingMessage : IMessage
     {
         public int UserId { get; }
         public long DiscordUid { get; }
     }
 
-    public readonly partial struct GreetingMessage
+    public readonly partial record struct GreetingMessage
     {
         public MessageHeader Header { get; }
         
