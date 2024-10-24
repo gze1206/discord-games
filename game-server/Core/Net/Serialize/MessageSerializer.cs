@@ -45,8 +45,9 @@ public static partial class MessageSerializer
         
     public static void Read(byte[] buffer, IMessageHandler handler)
     {
-        var checksum = BitConverter.ToInt32(buffer.AsSpan(buffer.Length - sizeof(int)));
-        var actualChecksum = CalcChecksum(buffer.AsSpan(0, buffer.Length - sizeof(int)));
+        var payloadSize = buffer.Length - sizeof(int);
+        var checksum = BitConverter.ToUInt32(buffer.AsSpan(payloadSize));
+        var actualChecksum = CalcChecksum(buffer.AsSpan(0, payloadSize));
         if (checksum != actualChecksum) throw InvalidMessageChecksumException.I;
         
         var reader = new BufferReader(buffer);
