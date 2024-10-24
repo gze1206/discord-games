@@ -23,6 +23,8 @@ public unsafe struct BufferSegment
     {
         MemoryPool.I.Return(this.array);
         this.array = null;
+        this.Next = null;
+        this.Used = 0;
     }
 
     public Span<byte> RequestSpan(int length)

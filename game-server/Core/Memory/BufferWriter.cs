@@ -26,16 +26,17 @@ public unsafe struct BufferWriter
         if (this.head == null) return;
 
         var node = this.head;
-        while (node->Next != null)
+        while (node != null)
         {
-            node->Dispose();
             var cur = node;
             node = node->Next;
+            cur->Dispose();
             NativeMemory.Free(cur);
         }
 
         this.head = null;
         this.tail = null;
+        this.UsedTotal = 0;
     }
 
     public Span<byte> RequestSpan(int length)
