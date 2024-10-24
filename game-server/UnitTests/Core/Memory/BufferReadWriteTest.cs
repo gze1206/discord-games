@@ -15,11 +15,11 @@ public class BufferReadWriteTest
     }
     
     [TestMethod]
-    [DataRow((byte)1, DisplayName = "Sample 1")]
-    [DataRow((byte)10, DisplayName = "Sample 2")]
-    [DataRow((byte)100, DisplayName = "Sample 3")]
-    [DataRow(byte.MinValue, DisplayName = "Sample 4")]
-    [DataRow(byte.MaxValue, DisplayName = "Sample 5")]
+    [DataRow((byte)1, DisplayName = "BufferReadWrite__Byte를_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 1")]
+    [DataRow((byte)10, DisplayName = "BufferReadWrite__Byte를_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 2")]
+    [DataRow((byte)100, DisplayName = "BufferReadWrite__Byte를_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 3")]
+    [DataRow(byte.MinValue, DisplayName = "BufferReadWrite__Byte를_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 4")]
+    [DataRow(byte.MaxValue, DisplayName = "BufferReadWrite__Byte를_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 5")]
     public void BufferReadWrite__Byte를_직렬화_후_다시_역직렬화하여_원본과_비교__일치(byte value)
     {
         // Arrange
@@ -43,11 +43,11 @@ public class BufferReadWriteTest
     }
     
     [TestMethod]
-    [DataRow(10, DisplayName = "Sample 1")]
-    [DataRow(-10, DisplayName = "Sample 2")]
-    [DataRow(0, DisplayName = "Sample 3")]
-    [DataRow(int.MinValue, DisplayName = "Sample 4")]
-    [DataRow(int.MaxValue, DisplayName = "Sample 5")]
+    [DataRow(10, DisplayName = "BufferReadWrite__Int32를_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 1")]
+    [DataRow(-10, DisplayName = "BufferReadWrite__Int32를_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 2")]
+    [DataRow(0, DisplayName = "BufferReadWrite__Int32를_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 3")]
+    [DataRow(int.MinValue, DisplayName = "BufferReadWrite__Int32를_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 4")]
+    [DataRow(int.MaxValue, DisplayName = "BufferReadWrite__Int32를_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 5")]
     public void BufferReadWrite__Int32를_직렬화_후_다시_역직렬화하여_원본과_비교__일치(int value)
     {
         // Arrange
@@ -71,11 +71,11 @@ public class BufferReadWriteTest
     }
     
     [TestMethod]
-    [DataRow(10L, DisplayName = "Sample 1")]
-    [DataRow(-10L, DisplayName = "Sample 2")]
-    [DataRow(0L, DisplayName = "Sample 3")]
-    [DataRow(long.MinValue, DisplayName = "Sample 4")]
-    [DataRow(long.MaxValue, DisplayName = "Sample 5")]
+    [DataRow(10L, DisplayName = "BufferReadWrite__Int64를_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 1")]
+    [DataRow(-10L, DisplayName = "BufferReadWrite__Int64를_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 2")]
+    [DataRow(0L, DisplayName = "BufferReadWrite__Int64를_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 3")]
+    [DataRow(long.MinValue, DisplayName = "BufferReadWrite__Int64를_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 4")]
+    [DataRow(long.MaxValue, DisplayName = "BufferReadWrite__Int64를_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 5")]
     public void BufferReadWrite__Int64를_직렬화_후_다시_역직렬화하여_원본과_비교__일치(long value)
     {
         // Arrange
@@ -99,11 +99,11 @@ public class BufferReadWriteTest
     }
     
     [TestMethod]
-    [DataRow("", DisplayName = "Sample 1")]
-    [DataRow("a", DisplayName = "Sample 2")]
-    [DataRow(null, DisplayName = "Sample 3")]
-    [DataRow("abcdefghijklmnopqrstuvwxyz", DisplayName = "Sample 4")]
-    [DataRow("UTB-8 인코딩 文字列", DisplayName = "Sample 5")]
+    [DataRow("", DisplayName = "BufferReadWrite__String을_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 1 (Empty)")]
+    [DataRow("a", DisplayName = "BufferReadWrite__String을_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 2 (Single character)")]
+    [DataRow(null, DisplayName = "BufferReadWrite__String을_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 3 (NULL)")]
+    [DataRow("abcdefghijklmnopqrstuvwxyz", DisplayName = "BufferReadWrite__String을_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 4")]
+    [DataRow("UTB-8 인코딩 文字列", DisplayName = "BufferReadWrite__String을_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 5")]
     public void BufferReadWrite__String을_직렬화_후_다시_역직렬화하여_원본과_비교__일치(string? value)
     {
         // Arrange
