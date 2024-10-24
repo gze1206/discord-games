@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using DiscordGames.Core.Memory;
 using DiscordGames.Core.Net.Message;
 
@@ -27,55 +26,5 @@ public static partial class MessageSerializer
         }
             
         return crc ^ 0xFFFFFFFF;
-    }
-
-    public static PingMessage ReadPingMessage(this ref BufferReader reader, ref MessageHeader header)
-    {
-        var _0 = reader.ReadInt64();
-        return new PingMessage(ref header, _0);
-    }
-
-    public static bool Write(this ref BufferWriter writer, PingMessage message)
-    {
-        var succeed = true;
-        succeed &= writer.Write(message.Header);
-        succeed &= writer.Write(message.UtcTicks);
-        return succeed;
-    }
-        
-    public static void Read(byte[] buffer, IMessageHandler handler)
-    {
-        var payloadSize = buffer.Length - sizeof(int);
-        var checksum = BitConverter.ToUInt32(buffer.AsSpan(payloadSize));
-        var actualChecksum = CalcChecksum(buffer.AsSpan(0, payloadSize));
-        if (checksum != actualChecksum) throw InvalidMessageChecksumException.I;
-        
-        var reader = new BufferReader(buffer);
-        var header = reader.ReadHeader();
-
-        switch (header.MessageType)
-        {
-            case MessageType.Ping:
-            {
-                handler.OnPing(reader.ReadPingMessage(ref header));
-                break;
-            }
-            default: throw new NotImplementedException();
-        }
-    }
-
-    public static byte[] Write(this ref PingMessage message)
-    {
-        var writer = new BufferWriter();
-        writer.Write(message);
-        
-        var size = writer.UsedTotal;
-        var buffer = new byte[size + sizeof(int)];
-        writer.CopyTo(buffer);
-        writer.Dispose();
-        
-        var checksum = CalcChecksum(buffer.AsSpan(0, size));
-        BitConverter.TryWriteBytes(buffer.AsSpan(size), checksum);
-        return buffer;
     }
 }

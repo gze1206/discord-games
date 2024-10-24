@@ -22,7 +22,6 @@ public unsafe struct BufferSegment
     public void Dispose()
     {
         MemoryPool.I.Return(this.array);
-        this.array = null;
         this.Next = null;
         this.Used = 0;
     }

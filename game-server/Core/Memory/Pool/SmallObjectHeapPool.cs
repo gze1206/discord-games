@@ -5,7 +5,7 @@ namespace DiscordGames.Core.Memory.Pool;
 
 public class SmallObjectHeapPool : IMemoryPool
 {
-    private ConcurrentQueue<byte[]> pool = new();
+    private readonly ConcurrentQueue<byte[]> pool = new();
 
     public byte[] Rent()
     {
@@ -22,7 +22,6 @@ public class SmallObjectHeapPool : IMemoryPool
     public void Dispose()
     {
         this.pool.Clear();
-        this.pool = null;
         GC.SuppressFinalize(this);
     }
 }

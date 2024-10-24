@@ -68,7 +68,7 @@ public class MessageSerializationCoreTest
             DateTime.UtcNow.Ticks);
 
         // Act
-        var binary = expected.Write();
+        var binary = MessageSerializer.Write(ref expected);
         MessageSerializer.Read(binary, handler);
 
         var isSucceed = await handler.Wait();
@@ -91,8 +91,8 @@ public class MessageSerializationCoreTest
             DateTime.UtcNow.Ticks + 5);
         
         // Act
-        var binA = a.Write();
-        var binB = b.Write();
+        var binA = MessageSerializer.Write(ref a);
+        var binB = MessageSerializer.Write(ref b);
         
         // Assert
         MyAssert.AreSequenceNotEquals(binA, binB);
@@ -108,8 +108,8 @@ public class MessageSerializationCoreTest
             DateTime.UtcNow.Ticks);
         
         // Act
-        var binA = message.Write();
-        var binB = message.Write();
+        var binA = MessageSerializer.Write(ref message);
+        var binB = MessageSerializer.Write(ref message);
         
         // Assert
         MyAssert.AreSequenceEquals(binA, binB);
