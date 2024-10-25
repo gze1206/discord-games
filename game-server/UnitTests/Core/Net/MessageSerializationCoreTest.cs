@@ -95,6 +95,8 @@ public class MessageSerializationCoreTest
 
         // Assert
         Assert.ThrowsException<InvalidMessageChecksumException>(() => MessageSerializer.Read(binary, handler));
+        Assert.IsFalse(await handler.Wait());
+        Assert.AreNotEqual(expected, handler.Actual);
     }
 
     [TestMethod]
