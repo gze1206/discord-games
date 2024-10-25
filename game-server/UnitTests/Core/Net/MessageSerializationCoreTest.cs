@@ -82,7 +82,7 @@ public class MessageSerializationCoreTest
     public async Task MessageSerializer__직렬화_후_Checksum_변조하고_다시_역직렬화하여_원본과_비교__예외_InvalidMessageChecksumException()
     {
         // Arrange
-        var handler = new PingTestHandler();
+        var handler = new PingTestHandler(100);
 
         var header = new MessageHeader(MessageSerializer.SchemeVersion, MessageChannel.Global, MessageType.Ping);
         var expected = new PingMessage(
@@ -110,7 +110,7 @@ public class MessageSerializationCoreTest
     public async Task MessageSerializer__직렬화_후_Checksum_변조하고_다시_역직렬화하여_원본과_비교__예외_MessageSchemeVersionException()
     {
         // Arrange
-        var handler = new PingTestHandler();
+        var handler = new PingTestHandler(100);
 
         var header = new MessageHeader(MessageSerializer.SchemeVersion - 1, MessageChannel.Global, MessageType.Ping);
         var expected = new PingMessage(
@@ -171,8 +171,14 @@ public class MessageSerializationCoreTest
     private class PingTestHandler : TestVirtualMessageHandler
     {
         private readonly TaskCompletionSource<bool> pingReceived = new();
+        private readonly int timeout;
         
         public PingMessage Actual { get; private set; }
+
+        public PingTestHandler(int timeout = 1000)
+        {
+            this.timeout = timeout;
+        }
         
         public override ValueTask OnPing(PingMessage message)
         {
@@ -182,6 +188,6 @@ public class MessageSerializationCoreTest
         }
 
         public async Task<bool> Wait()
-            => await Task.WhenAny(this.pingReceived.Task, Task.Delay(1000)) == this.pingReceived.Task;
+            => await Task.WhenAny(this.pingReceived.Task, Task.Delay(this.timeout)) == this.pingReceived.Task;
     }
 }
