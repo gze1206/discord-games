@@ -6,7 +6,7 @@ namespace UnitTests.TestClasses;
 
 public class TestVirtualMessageHandler : IMessageHandler
 {
-    public virtual Task OnPing(PingMessage message) { return Task.CompletedTask; }
+    public virtual ValueTask OnPing(PingMessage message) { return ValueTask.CompletedTask; }
 
-    public virtual Task OnGreeting(GreetingMessage message) { return Task.CompletedTask; }
+    public virtual ValueTask OnGreeting(GreetingMessage message) { return ValueTask.CompletedTask; }
 }

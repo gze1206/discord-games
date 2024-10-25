@@ -8,8 +8,11 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="LinqGen" Version="0.3.1" />
+      <PackageReference Include="LinqGen.Generator" Version="0.3.1" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
       <PackageReference Include="Microsoft.Orleans.Sdk" Version="8.2.0" />
+      <PackageReference Include="PooledAwait" Version="1.0.49" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,9 +1,11 @@
 ﻿using System.Text.Json.Serialization;
+using Cathei.LinqGen;
 using DiscordGames.Grain.ResultCodes.CommonSession;
 using DiscordGames.Grain.ResultCodes.PerudoSession;
 using DiscordGames.Grain.Interfaces.GameSessions;
 using DiscordGames.Grain.States;
 using Microsoft.Extensions.Logging;
+using PooledAwait;
 
 namespace DiscordGames.Grain.Implements.GameSessions;
 
@@ -16,6 +18,7 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
 
     private PlayerInfo? currentTurnInfo;
     private PlayerInfo? lastBidderInfo;
+    private PlayerInfoSelector playerInfoSelector;
     private int totalDices;
 
     public PerudoSessionGrain(ILogger<PerudoSessionGrain> logger)
@@ -23,7 +26,7 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
         this.logger = logger;
     }
 
-    public Task<PerudoSessionState> GetState() => Task.FromResult(this.State);
+    public ValueTask<PerudoSessionState> GetState() => ValueTask.FromResult(this.State);
 
     protected override async Task ReadStateAsync()
     {
@@ -51,30 +54,32 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
         }
     }
 
-    public Task<InitPerudoSessionResult> InitSession(UserId userId, int maxPlayer, bool isClassicRule)
+    public ValueTask<InitPerudoSessionResult> InitSession(UserId userId, int maxPlayer, bool isClassicRule)
     {
         using var logScope = this.logger.BeginScope("Perudo/InitSession");
-        if (this.State.IsPlaying) return Task.FromResult(InitPerudoSessionResult.AlreadyStarted);
-        if (this.State.IsInitialized) return Task.FromResult(InitPerudoSessionResult.AlreadyInitialized);
-        if (maxPlayer is < DefaultMinPlayer or > DefaultMaxPlayer) return Task.FromResult(InitPerudoSessionResult.InvalidMaxPlayer);
+        if (this.State.IsPlaying) return ValueTask.FromResult(InitPerudoSessionResult.AlreadyStarted);
+        if (this.State.IsInitialized) return ValueTask.FromResult(InitPerudoSessionResult.AlreadyInitialized);
+        if (maxPlayer is < DefaultMinPlayer or > DefaultMaxPlayer) return ValueTask.FromResult(InitPerudoSessionResult.InvalidMaxPlayer);
 
         this.State.HostUserId = userId;
         this.State.MaxPlayer = maxPlayer;
         this.State.IsClassicRule = isClassicRule;
         this.State.IsInitialized = true;
         this.State.Players.Add(userId);
+
+        this.playerInfoSelector = new PlayerInfoSelector(isClassicRule ? 5 : 3);
         
         this.logger.LogPerudoInitSessionOk(this.GetPrimaryKey(), userId, maxPlayer, isClassicRule);
         
-        return Task.FromResult(InitPerudoSessionResult.Ok);
+        return ValueTask.FromResult(InitPerudoSessionResult.Ok);
     }
     
-    public Task<JoinPlayerResult> JoinPlayer(UserId userId)
+    public ValueTask<JoinPlayerResult> JoinPlayer(UserId userId)
     {
         using var logScope = this.logger.BeginScope("Perudo/JoinPlayer");
-        if (this.State.IsPlaying) return Task.FromResult(JoinPlayerResult.AlreadyStarted);
-        if (this.State.Players.Contains(userId)) return Task.FromResult(JoinPlayerResult.AlreadyJoined);
-        if (this.State.MaxPlayer <= this.State.Players.Count) return Task.FromResult(JoinPlayerResult.MaxPlayer);
+        if (this.State.IsPlaying) return ValueTask.FromResult(JoinPlayerResult.AlreadyStarted);
+        if (this.State.Players.Contains(userId)) return ValueTask.FromResult(JoinPlayerResult.AlreadyJoined);
+        if (this.State.MaxPlayer <= this.State.Players.Count) return ValueTask.FromResult(JoinPlayerResult.MaxPlayer);
         
         // 관전자가 게임에 참가한다면 관전자 목록에서 제거해줍니다
         this.State.Spectators.Remove(userId);
@@ -82,42 +87,46 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
         
         this.logger.LogJoinPlayerOk(this.GetPrimaryKey(), userId);
 
-        return Task.FromResult(JoinPlayerResult.Ok);
+        return ValueTask.FromResult(JoinPlayerResult.Ok);
     }
 
-    public async Task<LeavePlayerResult> LeavePlayer(UserId userId)
+    public ValueTask<LeavePlayerResult> LeavePlayer(UserId userId)
     {
-        using var logScope = this.logger.BeginScope("Perudo/LeavePlayer");
-        if (!this.State.Players.Contains(userId)) return LeavePlayerResult.NotJoinedUser;
-
-        this.State.Players.Remove(userId);
-        
-        // 플레이 중일 때의 플레이어 이탈 처리
-        if (this.State.IsPlaying)
+        return Internal(this, userId);
+        static async PooledValueTask<LeavePlayerResult> Internal(PerudoSessionGrain self, UserId userId)
         {
-            var userInfo = this.State.TurnOrder.Find(x => x.UserId == userId);
+            using var logScope = self.logger.BeginScope("Perudo/LeavePlayer");
+            if (!self.State.Players.Contains(userId)) return LeavePlayerResult.NotJoinedUser;
 
-            if (userInfo != null)
+            self.State.Players.Remove(userId);
+            
+            // 플레이 중일 때의 플레이어 이탈 처리
+            if (self.State.IsPlaying)
             {
-                await this.ProcessDropout(userInfo);
+                var userInfo = self.State.TurnOrder.Find(x => x.UserId == userId);
+
+                if (userInfo != null)
+                {
+                    await self.ProcessDropout(userInfo);
+                }
             }
+            
+            self.logger.LogLeavePlayerOk(self.GetPrimaryKey(), userId);
+            
+            return LeavePlayerResult.Ok;
         }
-        
-        this.logger.LogLeavePlayerOk(this.GetPrimaryKey(), userId);
-        
-        return LeavePlayerResult.Ok;
     }
 
-    public Task<JoinSpectatorResult> JoinSpectator(UserId userId)
+    public ValueTask<JoinSpectatorResult> JoinSpectator(UserId userId)
     {
         using var logScope = this.logger.BeginScope("Perudo/JoinSpectator");
-        if (this.State.Spectators.Contains(userId)) return Task.FromResult(JoinSpectatorResult.AlreadyJoined);
+        if (this.State.Spectators.Contains(userId)) return ValueTask.FromResult(JoinSpectatorResult.AlreadyJoined);
         
         // 현재 플레이어로 참가 중인 유저여도 게임 시작 전이라면 관전자로 전환할 수 있습니다
         // 하지만, 게임 시작 이후라면 게임에서 이탈한 다음에 관전자로 참가해야 합니다
         if (this.State.Players.Contains(userId))
         {
-            if (this.State.IsPlaying) return Task.FromResult(JoinSpectatorResult.AlreadyJoined);
+            if (this.State.IsPlaying) return ValueTask.FromResult(JoinSpectatorResult.AlreadyJoined);
 
             this.State.Players.Remove(userId);
         }
@@ -126,46 +135,52 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
         
         this.logger.LogJoinSpectatorOk(this.GetPrimaryKey(), userId);
 
-        return Task.FromResult(JoinSpectatorResult.Ok);
+        return ValueTask.FromResult(JoinSpectatorResult.Ok);
     }
 
-    public Task<LeaveSpectatorResult> LeaveSpectator(UserId userId)
+    public ValueTask<LeaveSpectatorResult> LeaveSpectator(UserId userId)
     {
         using var logScope = this.logger.BeginScope("Perudo/LeaveSpectator");
-        if (!this.State.Spectators.Remove(userId)) return Task.FromResult(LeaveSpectatorResult.NotJoinedUser);
+        if (!this.State.Spectators.Remove(userId)) return ValueTask.FromResult(LeaveSpectatorResult.NotJoinedUser);
         
         this.logger.LogLeaveSpectatorOk(this.GetPrimaryKey(), userId);
         
-        return Task.FromResult(LeaveSpectatorResult.Ok);
+        return ValueTask.FromResult(LeaveSpectatorResult.Ok);
     }
 
-    public async Task<StartGameResult> StartGame(UserId userId)
+    public ValueTask<StartGameResult> StartGame(UserId userId)
     {
-        using var logScope = this.logger.BeginScope("Perudo/StartGame");
-        if (this.State.IsPlaying) return StartGameResult.AlreadyStarted;
-        if (this.State.HostUserId != userId) return StartGameResult.NotFromHostUser;
-        if (this.State.Players.Count < DefaultMinPlayer) return StartGameResult.MinPlayer;
+        return Internal(this, userId);
         
-        var initLife = this.State.IsClassicRule ? 5 : 3;
-        this.State.TurnOrder.AddRange(this.State.Players
-            .OrderBy(_ => Random.Shared.Next())
-            .Select(playerUserId => new PlayerInfo(playerUserId, initLife)));
+        static async PooledValueTask<StartGameResult> Internal(PerudoSessionGrain self, UserId userId)
+        {
+            using var logScope = self.logger.BeginScope("Perudo/StartGame");
+            if (self.State.IsPlaying) return StartGameResult.AlreadyStarted;
+            if (self.State.HostUserId != userId) return StartGameResult.NotFromHostUser;
+            if (self.State.Players.Count < DefaultMinPlayer) return StartGameResult.MinPlayer;
+            
+            self.State.TurnOrder.AddRange(self.State.Players
+                .Gen()
+                .OrderBy(_ => Random.Shared.Next())
+                .Select(self.playerInfoSelector)
+                .AsEnumerable());
 
-        this.State.IsPlaying = true;
-        await this.StartRound(true);
-        
-        this.logger.LogStartGameOk(this.GetPrimaryKey(), userId);
-        
-        return StartGameResult.Ok;
+            self.State.IsPlaying = true;
+            await self.StartRound(true);
+            
+            self.logger.LogStartGameOk(self.GetPrimaryKey(), userId);
+            
+            return StartGameResult.Ok;
+        }
     }
 
-    public Task<PlaceBidResult> PlaceBid(UserId userId, int quantity, int face)
+    public ValueTask<PlaceBidResult> PlaceBid(UserId userId, int quantity, int face)
     {
         using var logScope = this.logger.BeginScope("Perudo/PlaceBid");
-        if (!this.State.IsPlaying) return Task.FromResult(PlaceBidResult.NotStartedGame);
-        if (this.currentTurnInfo?.UserId != userId) return Task.FromResult(PlaceBidResult.NotFromCurrentTurnUser);
-        if (quantity < 1 || this.totalDices < quantity) return Task.FromResult(PlaceBidResult.InvalidQuantity);
-        if (face is < 1 or > 6) return Task.FromResult(PlaceBidResult.InvalidFace);
+        if (!this.State.IsPlaying) return ValueTask.FromResult(PlaceBidResult.NotStartedGame);
+        if (this.currentTurnInfo?.UserId != userId) return ValueTask.FromResult(PlaceBidResult.NotFromCurrentTurnUser);
+        if (quantity < 1 || this.totalDices < quantity) return ValueTask.FromResult(PlaceBidResult.InvalidQuantity);
+        if (face is < 1 or > 6) return ValueTask.FromResult(PlaceBidResult.InvalidFace);
 
         if (!this.currentTurnInfo.IsAlive) throw new InvalidOperationException("탈락자의 턴이 진행 중입니다");
         
@@ -177,17 +192,17 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
             // Classic : 주사위의 수가 더 높거나, 같은 수의 더 높은 눈을 제시해야 합니다
             if (quantity < lastQuantity)
             {
-                return Task.FromResult(PlaceBidResult.CannotLowerQuantityBid);
+                return ValueTask.FromResult(PlaceBidResult.CannotLowerQuantityBid);
             }
             if (quantity == lastQuantity && face <= lastFace)
             {
-                return Task.FromResult(PlaceBidResult.CannotLowerFaceBid);
+                return ValueTask.FromResult(PlaceBidResult.CannotLowerFaceBid);
             }
         }
         else
         {
             // Simple : 주사위의 수가 더 높아져야 합니다
-            if (quantity <= lastQuantity) return Task.FromResult(PlaceBidResult.CannotLowerQuantityBid);
+            if (quantity <= lastQuantity) return ValueTask.FromResult(PlaceBidResult.CannotLowerQuantityBid);
         }
 
         this.State.LastBidUserId = userId;
@@ -199,63 +214,67 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
 
         this.logger.LogPerudoPlaceBidOk(this.GetPrimaryKey(), userId, lastQuantity, lastFace, quantity, face);
         
-        return Task.FromResult(PlaceBidResult.Ok);
+        return ValueTask.FromResult(PlaceBidResult.Ok);
     }
 
-    public async Task<ChallengeResult> Challenge(UserId userId)
+    public ValueTask<ChallengeResult> Challenge(UserId userId)
     {
-        var lastBidder = this.State.LastBidUserId;
-        using var logScope = this.logger.BeginScope("Perudo/Challenge");
-        if (!this.State.IsPlaying) return ChallengeResult.NotStartedGame;
-        if (lastBidder < 0 || this.lastBidderInfo == null) return ChallengeResult.NoPreviousBid;
-        if (this.currentTurnInfo?.UserId != userId) return ChallengeResult.NotFromCurrentTurnUser;
-
-        if (!this.currentTurnInfo.IsAlive) throw new InvalidOperationException("탈락자의 턴이 진행 중입니다");
-
-        var lastBidQuantity = this.State.LastBidQuantity;
-        var face = this.State.LastBidFace;
-
-        var actualQuantity = 0;
-        foreach (var player in this.State.TurnOrder)
-        {
-            foreach (var die in player.Dices)
-            {
-                if (die != face) continue;
-                actualQuantity++;
-            }
-        }
-
-        // 선언이 유효하지 않았으면 선언자, 선언이 유효했으면 도전자의 패배입니다
-        var loser = lastBidQuantity < actualQuantity
-            ? this.lastBidderInfo!
-            : this.currentTurnInfo!;
-
-        loser.Life--;
-        if (this.State.IsClassicRule) loser.Dices.RemoveLast();
-
-        if (!loser.IsAlive)
-        {
-            await this.ProcessDropout(loser);
-        }
-        else
-        {
-            this.State.CurrentTurn = this.State.TurnOrder.IndexOf(loser);
-            this.currentTurnInfo = loser;
-            await this.StartRound();
-        }
-
-        this.logger.LogPerudoChallengeOk(this.GetPrimaryKey(), userId, lastBidder, lastBidQuantity, face, actualQuantity);
+        return Internal(this, userId);
         
-        return ChallengeResult.Ok;
+        static async PooledValueTask<ChallengeResult> Internal(PerudoSessionGrain self, UserId userId)
+        {
+            var lastBidder = self.State.LastBidUserId;
+            using var logScope = self.logger.BeginScope("Perudo/Challenge");
+            if (!self.State.IsPlaying) return ChallengeResult.NotStartedGame;
+            if (lastBidder < 0 || self.lastBidderInfo == null) return ChallengeResult.NoPreviousBid;
+            if (self.currentTurnInfo?.UserId != userId) return ChallengeResult.NotFromCurrentTurnUser;
+
+            if (!self.currentTurnInfo.IsAlive) throw new InvalidOperationException("탈락자의 턴이 진행 중입니다");
+
+            var lastBidQuantity = self.State.LastBidQuantity;
+            var face = self.State.LastBidFace;
+            var faceCounter = new EqualFunc<int>(face);
+
+            var actualQuantity = 0;
+            foreach (var dice in self.State.TurnOrder
+                         .Gen()
+                         .Select(player => player.Dices))
+            {
+                actualQuantity += dice.Gen().Count(faceCounter);
+            }
+
+            // 선언이 유효하지 않았으면 선언자, 선언이 유효했으면 도전자의 패배입니다
+            var loser = lastBidQuantity < actualQuantity
+                ? self.lastBidderInfo!
+                : self.currentTurnInfo!;
+
+            loser.Life--;
+            if (self.State.IsClassicRule) loser.Dices.RemoveLast();
+
+            if (!loser.IsAlive)
+            {
+                await self.ProcessDropout(loser);
+            }
+            else
+            {
+                self.State.CurrentTurn = self.State.TurnOrder.IndexOf(loser);
+                self.currentTurnInfo = loser;
+                await self.StartRound();
+            }
+
+            self.logger.LogPerudoChallengeOk(self.GetPrimaryKey(), userId, lastBidder, lastBidQuantity, face, actualQuantity);
+            
+            return ChallengeResult.Ok;
+        }
     }
 
-    private async Task ProcessDropout(PlayerInfo dropout)
+    private async ValueTask ProcessDropout(PlayerInfo dropout)
     {
         this.State.TurnOrder.Remove(dropout);
         await this.StartRound(pickRandomFirstPlayer: true);
     }
 
-    private Task StartRound(bool pickRandomFirstPlayer = false)
+    private ValueTask StartRound(bool pickRandomFirstPlayer = false)
     {
         using var logScope = this.logger.BeginScope("Perudo/StartGame");
 
@@ -272,9 +291,9 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
         
         this.logger.LogPerudoStartRound(this.GetPrimaryKey(), this.currentTurnInfo?.UserId ?? throw new InvalidOperationException("생존한 플레이어가 없습니다"));
 
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
-
+    
     public class PlayerInfo
     {
         public UserId UserId { get; }
@@ -307,6 +326,31 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
                 node.ValueRef = Random.Shared.Next(1, 7);
             }
         }
+    }
+    
+    private readonly struct PlayerInfoSelector : IStructFunction<int, PlayerInfo>
+    {
+        private readonly int initLife;
+
+        public PlayerInfoSelector(int initLife)
+        {
+            this.initLife = initLife;
+        }
+
+        public PlayerInfo Invoke(int playerId) => new(playerId, this.initLife);
+    }
+
+    private readonly struct EqualFunc<T> : IStructFunction<T, bool>
+        where T : IEquatable<T>
+    {
+        private readonly T value;
+
+        public EqualFunc(T value)
+        {
+            this.value = value;
+        }
+
+        public bool Invoke(T cur) => this.value.Equals(cur);
     }
 }
 

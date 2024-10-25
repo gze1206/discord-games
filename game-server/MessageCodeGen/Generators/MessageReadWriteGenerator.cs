@@ -55,7 +55,7 @@ namespace MessageCodeGen.Generators
                         writer.Write($"case MessageType.{name}:");
                         using (writer.BeginBlock())
                         {
-                            writer.Write($"handler.On{name}(reader.Read{typeName}(ref header));");
+                            writer.Write($"handler.On{name}(reader.Read{typeName}(ref header)).GetAwaiter().GetResult();");
                             writer.Write("break;");
                         }
                     }

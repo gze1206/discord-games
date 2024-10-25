@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using WebSocketSharp;
 using WebSocketSharp.Server;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
-using WebSocketException = System.Net.WebSockets.WebSocketException;
 
 namespace DiscordGames.Server.Net;
 
@@ -32,31 +31,20 @@ public class MessageHandler : WebSocketBehavior, IMessageHandler
         
         MessageSerializer.Read(e.RawData, this);
     }
-
-    private Task SendAsync(byte[] data)
+    
+    public ValueTask OnGreeting(GreetingMessage message)
     {
-        var source = new TaskCompletionSource();
-
-        this.SendAsync(data, succeed =>
-        {
-            if (succeed) source.SetResult();
-            else source.SetException(new WebSocketException("Failed to send"));
-        });
-
-        return source.Task;
-    }
-
-    public async Task OnGreeting(GreetingMessage message)
-    {
-        await this.SendAsync(MessageSerializer.WriteGreetingMessage(MessageChannel.Direct, -1, message.DiscordUid));
+        this.Send(MessageSerializer.WriteGreetingMessage(MessageChannel.Direct, -1, message.DiscordUid));
         this.logger.LogOnGreeting(this.ID, message.DiscordUid);
+        return ValueTask.CompletedTask;
     }
     
-    public async Task OnPing(PingMessage message)
+    public ValueTask OnPing(PingMessage message)
     {
         var utcTicks = DateTime.UtcNow.Ticks;
-        await this.SendAsync(MessageSerializer.WritePingMessage(MessageChannel.Direct, utcTicks));
+        this.Send(MessageSerializer.WritePingMessage(MessageChannel.Direct, utcTicks));
         this.logger.LogOnPing(this.ID, message.UtcTicks, utcTicks);
+        return ValueTask.CompletedTask;
     }
 }
 

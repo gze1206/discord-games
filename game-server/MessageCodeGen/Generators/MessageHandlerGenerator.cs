@@ -24,7 +24,7 @@ namespace MessageCodeGen.Generators
                 foreach (var message in messages)
                 {
                     var (messageTypeName, messageName) = GetNames(message);
-                    writer.Write($"Task On{messageName}({messageTypeName} message);");
+                    writer.Write($"ValueTask On{messageName}({messageTypeName} message);");
                 }
             }
 

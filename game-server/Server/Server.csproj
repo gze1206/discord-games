@@ -16,6 +16,7 @@
       <PackageReference Include="Microsoft.Orleans.Serialization.SystemTextJson" Version="8.2.0" />
       <PackageReference Include="Microsoft.Orleans.Server" Version="8.2.0" />
       <PackageReference Include="OrleansDashboard" Version="8.2.0" />
+      <PackageReference Include="PooledAwait" Version="1.0.49" />
       <PackageReference Include="WebSocketSharp" Version="1.0.3-rc11" />
     </ItemGroup>
 

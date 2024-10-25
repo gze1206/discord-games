@@ -142,7 +142,7 @@ public class MessageSerializationCoreTest
         
         public PingMessage Actual { get; private set; }
         
-        public override Task OnPing(PingMessage message)
+        public override ValueTask OnPing(PingMessage message)
         {
             this.pingReceived.SetResult(true);
             this.Actual = message;
