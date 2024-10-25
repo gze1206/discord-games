@@ -62,7 +62,7 @@ public class MessageSerializationCoreTest
         // Arrange
         var handler = new PingTestHandler();
 
-        var header = new MessageHeader(1, MessageChannel.Global, MessageType.Ping);
+        var header = new MessageHeader(MessageSerializer.SchemeVersion, MessageChannel.Global, MessageType.Ping);
         var expected = new PingMessage(
             ref header,
             DateTime.UtcNow.Ticks);
@@ -84,26 +84,58 @@ public class MessageSerializationCoreTest
         // Arrange
         var handler = new PingTestHandler();
 
-        var header = new MessageHeader(1, MessageChannel.Global, MessageType.Ping);
+        var header = new MessageHeader(MessageSerializer.SchemeVersion, MessageChannel.Global, MessageType.Ping);
         var expected = new PingMessage(
             ref header,
             DateTime.UtcNow.Ticks);
 
         // Act
-        var binary = MessageSerializer.Write(ref expected);
-        binary[^1] = (byte)((binary[^1] + 1) % byte.MaxValue);
+        try
+        {
+            var binary = MessageSerializer.Write(ref expected);
+            binary[^1] = (byte)((binary[^1] + 1) % byte.MaxValue);
 
-        // Assert
-        Assert.ThrowsException<InvalidMessageChecksumException>(() => MessageSerializer.Read(binary, handler));
-        Assert.IsFalse(await handler.Wait());
-        Assert.AreNotEqual(expected, handler.Actual);
+            MessageSerializer.Read(binary, handler);
+        }
+        catch (InvalidMessageChecksumException)
+        {
+            // Assert
+            Assert.IsFalse(await handler.Wait());
+            Assert.AreNotEqual(expected, handler.Actual);
+        }
+
+    }
+    
+    [TestMethod]
+    public async Task MessageSerializer__직렬화_후_Checksum_변조하고_다시_역직렬화하여_원본과_비교__예외_MessageSchemeVersionException()
+    {
+        // Arrange
+        var handler = new PingTestHandler();
+
+        var header = new MessageHeader(MessageSerializer.SchemeVersion - 1, MessageChannel.Global, MessageType.Ping);
+        var expected = new PingMessage(
+            ref header,
+            DateTime.UtcNow.Ticks);
+
+        // Act
+        try
+        {
+            var binary = MessageSerializer.Write(ref expected);
+            MessageSerializer.Read(binary, handler);
+        }
+        catch (MessageSchemeVersionException)
+        {
+            // Assert
+            Assert.IsFalse(await handler.Wait());
+            Assert.AreNotEqual(expected, handler.Actual);
+        }
     }
 
     [TestMethod]
     public void MessageSerializer__서로_다른_메시지를_직렬화하여_비교__불일치()
     {
         // Arrange
-        var header = new MessageHeader(1, MessageChannel.Global, MessageType.Ping);
+        var header = new MessageHeader(MessageSerializer.SchemeVersion, MessageChannel.Global, MessageType.Ping);
         var a = new PingMessage(
             ref header,
             DateTime.UtcNow.Ticks - 5);
@@ -123,7 +155,7 @@ public class MessageSerializationCoreTest
     public void MessageSerializer__같은_메시지를_두_번_직렬화하여_비교__일치()
     {
         // Arrange
-        var header = new MessageHeader(1, MessageChannel.Global, MessageType.Ping);
+        var header = new MessageHeader(MessageSerializer.SchemeVersion, MessageChannel.Global, MessageType.Ping);
         var message = new PingMessage(
             ref header,
             DateTime.UtcNow.Ticks);

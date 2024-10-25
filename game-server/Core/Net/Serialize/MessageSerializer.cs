@@ -6,7 +6,8 @@ namespace DiscordGames.Core.Net.Serialize;
 
 public static partial class MessageSerializer
 {
-    private const byte SchemeVersion = 1;
+    internal const byte SchemeVersion = 1;
+    
     private const int VersionBits = 4;
     private const byte VersionMask = byte.MaxValue & (byte.MaxValue << VersionBits);
 

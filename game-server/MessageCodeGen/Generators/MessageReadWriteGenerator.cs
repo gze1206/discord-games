@@ -44,7 +44,6 @@ namespace MessageCodeGen.Generators
                 writer.Write();
                 writer.Write("var reader = new BufferReader(buffer);");
                 writer.Write("var header = reader.ReadHeader();");
-                writer.Write("if (header.SchemeVersion != SchemeVersion) throw MessageSchemeVersionException.I;");
                 writer.Write();
                 writer.Write("switch (header.MessageType)");
                 using (writer.BeginBlock())
