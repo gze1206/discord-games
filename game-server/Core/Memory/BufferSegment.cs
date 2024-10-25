@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using DiscordGames.Core.Memory.Pool;
 
 #pragma warning disable CS8500
@@ -7,34 +8,53 @@ namespace DiscordGames.Core.Memory;
 
 public unsafe struct BufferSegment
 {
-    private byte[] array;
+#if USE_BUFFER_MEMORY
+    private BufferMemory? memory;
+#else
+    private byte[]? memory;
+#endif
 
     public BufferSegment* Next { get; set; }
     public int Used { get; private set; }
 
     public void Init()
     {
-        this.array = MemoryPool.I.Rent() ?? throw new InvalidOperationException("MemoryPool에서 바이트 배열을 얻지 못했습니다.");
+        this.memory = MemoryPool.I.Rent();
+#if USE_BUFFER_MEMORY
+        this.memory.AddRef();
+#endif
         this.Next = null;
         this.Used = 0;
     }
 
     public void Dispose()
     {
-        MemoryPool.I.Return(this.array);
+#if USE_BUFFER_MEMORY
+        this.memory?.Release();
+#endif
+        MemoryPool.I.Return(this.memory!);
+        this.memory = null;
         this.Next = null;
         this.Used = 0;
     }
 
     public Span<byte> RequestSpan(int length)
     {
-        var span = new Span<byte>(this.array, this.Used, length);
+#if USE_BUFFER_MEMORY
+        var span = new Span<byte>(this.memory!.Buffer, this.Used, length);
+#else
+        var span = new Span<byte>(this.memory, this.Used, length);
+#endif
         this.Used += length;
         return span;
     }
 
     public void CopyTo(Span<byte> dest, int index)
     {
-        this.array.AsSpan(0, this.Used).CopyTo(dest[index..(index + this.Used)]);
+#if USE_BUFFER_MEMORY
+        this.memory!.Buffer.AsSpan(0, this.Used).CopyTo(dest[index..(index + this.Used)]);
+#else
+        this.memory!.AsSpan(0, this.Used).CopyTo(dest[index..(index + this.Used)]);
+#endif
     }
 }

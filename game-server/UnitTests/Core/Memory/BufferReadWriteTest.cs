@@ -1,19 +1,12 @@
 using System.Text;
 using DiscordGames.Core.Memory;
 using DiscordGames.Core.Net.Serialize;
-using UnitTests.Utils;
 
 namespace UnitTests.Core.Memory;
 
 [TestClass, TestCategory("Serialization")]
 public class BufferReadWriteTest
 {
-    [TestInitialize]
-    public void Init()
-    {
-        Globals.Init();
-    }
-    
     [TestMethod]
     [DataRow((byte)1, DisplayName = "BufferReadWrite__Byte를_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 1")]
     [DataRow((byte)10, DisplayName = "BufferReadWrite__Byte를_직렬화_후_다시_역직렬화하여_원본과_비교 - Sample 2")]

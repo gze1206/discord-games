@@ -12,12 +12,6 @@ namespace UnitTests.Core.Net;
 [TestClass, TestCategory("Serialization"), TestCategory("Message")]
 public class MessageSerializationCoreTest
 {
-    [TestInitialize]
-    public void Init()
-    {
-        Globals.Init();
-    }
-    
     [TestMethod]
     [DataRow("123456789", 0xCBF43926U, DisplayName = "CalcChecksum__사전_계산된_Checksum과_비교 - Sample 1 - \"123456789\"")]
     [DataRow("TEST DATA", 0x560B9F59U, DisplayName = "CalcChecksum__사전_계산된_Checksum과_비교 - Sample 2 - \"TEST DATA\"")]

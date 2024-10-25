@@ -91,8 +91,10 @@ public static partial class MessageSerializer
     public static bool Write(this ref BufferWriter writer, MessageHeader header)
     {
         var span = writer.RequestSpan(MessageHeader.HeaderSize);
-        span[0] |= (byte)(VersionMask & (header.SchemeVersion << VersionBits));
-        span[0] |= (byte)(~VersionMask & (byte)header.Channel);
+        span[0] = (byte)(
+            VersionMask & (header.SchemeVersion << VersionBits)
+            | (~VersionMask & (byte)header.Channel)
+        );
         span[1] = (byte)header.MessageType;
         return true;
     }
