@@ -77,6 +77,25 @@ public class MessageSerializationCoreTest
         Assert.IsTrue(isSucceed, "메시지 역직렬화에 성공해야 합니다");
         Assert.AreEqual(expected, handler.Actual);
     }
+    
+    [TestMethod]
+    public async Task MessageSerializer__직렬화_후_Checksum_변조하고_다시_역직렬화하여_원본과_비교__예외_InvalidMessageChecksumException()
+    {
+        // Arrange
+        var handler = new PingTestHandler();
+
+        var header = new MessageHeader(1, MessageChannel.Global, MessageType.Ping);
+        var expected = new PingMessage(
+            ref header,
+            DateTime.UtcNow.Ticks);
+
+        // Act
+        var binary = MessageSerializer.Write(ref expected);
+        binary[^1] += 1;
+
+        // Assert
+        Assert.ThrowsException<InvalidMessageChecksumException>(() => MessageSerializer.Read(binary, handler));
+    }
 
     [TestMethod]
     public void MessageSerializer__서로_다른_메시지를_직렬화하여_비교__불일치()
