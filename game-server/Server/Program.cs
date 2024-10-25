@@ -35,6 +35,11 @@ try
     using var host = builder.Build();
 
     ServiceLocator.GrainFactory = host.Services.GetRequiredService<IGrainFactory>();
+    ServiceLocator.LoggerFactory = LoggerFactory.Create(loggingBuilder =>
+    {
+        loggingBuilder.AddSimpleConsole(options => options.IncludeScopes = true);
+    });
+    
     Console.WriteLine("WebSocket Listening on {0}:{1}...", webSocketServer.Address ?? IPAddress.Loopback, webSocketServer.Port.ToString());
 
     await host.RunAsync();
