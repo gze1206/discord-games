@@ -4,6 +4,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 
+using static MessageCodeGen.Utils;
+
 namespace MessageCodeGen.Generators
 {
     public static class MessageBufferReadWriteGenerator
@@ -40,13 +42,10 @@ namespace MessageCodeGen.Generators
             var body = new List<string>();
             var index = 0;
             
-            foreach (var property in message.GetMembers())
+            foreach (var property in GetMessageProperties(message))
             {
-                if (property is not IPropertySymbol propertySymbol) continue;
-                if (propertySymbol.SetMethod?.IsInitOnly != true) continue;
-
                 args.Append($", _{index}");
-                body.Add($"var _{index} = reader.Read{propertySymbol.Type.Name}();");
+                body.Add($"var _{index} = reader.Read{property.Type.Name}();");
                 index++;
             }
             
@@ -79,12 +78,9 @@ namespace MessageCodeGen.Generators
             {
                 writer.Write("var succeed = true;");
                 writer.Write("succeed &= writer.Write(message.Header);");
-                foreach (var property in message.GetMembers())
+                foreach (var property in GetMessageProperties(message))
                 {
-                    if (property is not IPropertySymbol propertySymbol) continue;
-                    if (propertySymbol.SetMethod?.IsInitOnly != true) continue;
-
-                    writer.Write($"succeed &= writer.Write(message.{propertySymbol.Name});");
+                    writer.Write($"succeed &= writer.Write(message.{property.Name});");
                 }
                 writer.Write("return succeed;");
             }

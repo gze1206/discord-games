@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 
+using static MessageCodeGen.Utils;
+
 namespace MessageCodeGen.Generators
 {
     public static class MessagePartialGenerator
@@ -27,13 +29,10 @@ namespace MessageCodeGen.Generators
                     var args = new List<string> { "ref MessageHeader header" };
                     var body = new List<string> { "this.Header = header;" };
                 
-                    foreach (var property in message.GetMembers())
+                    foreach (var property in GetMessageProperties(message))
                     {
-                        if (property is not IPropertySymbol propertySymbol) continue;
-                        if (propertySymbol.SetMethod?.IsInitOnly != true) continue;
-
-                        args.Add($"{propertySymbol.Type.Name} {propertySymbol.Name}");
-                        body.Add($"this.{propertySymbol.Name} = {propertySymbol.Name};");
+                        args.Add($"{property.Type.Name} {property.Name}");
+                        body.Add($"this.{property.Name} = {property.Name};");
                     }
                     
                     writer.Write("public MessageHeader Header { get; }");

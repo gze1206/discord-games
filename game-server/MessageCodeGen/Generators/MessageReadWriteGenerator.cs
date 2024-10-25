@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 
@@ -43,6 +44,7 @@ namespace MessageCodeGen.Generators
                 writer.Write();
                 writer.Write("var reader = new BufferReader(buffer);");
                 writer.Write("var header = reader.ReadHeader();");
+                writer.Write("if (header.SchemeVersion != SchemeVersion) throw MessageSchemeVersionException.I;");
                 writer.Write();
                 writer.Write("switch (header.MessageType)");
                 using (writer.BeginBlock())
@@ -80,6 +82,24 @@ namespace MessageCodeGen.Generators
                     writer.Write("var checksum = CalcChecksum(buffer.AsSpan(0, size));");
                     writer.Write("BitConverter.TryWriteBytes(buffer.AsSpan(size), checksum);");
                     writer.Write("return buffer;");
+                }
+                writer.Write();
+
+                var (typeName, name) = GetNames(message);
+                var args = new StringBuilder("MessageChannel channel");
+                var messageArgs = new StringBuilder("ref header");
+                foreach (var property in GetMessageProperties(message))
+                {
+                    args.Append($", {property.Type.Name} {property.Name}");
+                    messageArgs.Append($", {property.Name}");
+                }
+                
+                writer.Write($"public static byte[] Write{typeName}({args})");
+                using (writer.BeginBlock())
+                {
+                    writer.Write($"var header = new MessageHeader(SchemeVersion, channel, MessageType.{name});");
+                    writer.Write($"var message = new {typeName}({messageArgs});");
+                    writer.Write("return Write(ref message);");
                 }
                 writer.Write();
             }
