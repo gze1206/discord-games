@@ -91,7 +91,7 @@ public class MessageSerializationCoreTest
 
         // Act
         var binary = MessageSerializer.Write(ref expected);
-        binary[^1] += 1;
+        binary[^1] = (byte)((binary[^1] + 1) % byte.MaxValue);
 
         // Assert
         Assert.ThrowsException<InvalidMessageChecksumException>(() => MessageSerializer.Read(binary, handler));
