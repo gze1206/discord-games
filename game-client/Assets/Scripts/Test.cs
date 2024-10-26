@@ -25,7 +25,7 @@ public class Test : MonoBehaviour
         var str = string.Join(", ", serialized);
         sb.AppendLine($"<color=yellow>{str}</color>");
         
-        MessageSerializer.Read(serialized, new TestHandler(GetComponent<TMP_Text>(), sb));
+        MessageSerializer.Read(serialized, new TestHandler(this.GetComponent<TMP_Text>(), sb));
     }
     
     private class TestHandler : IMessageHandler
@@ -46,9 +46,9 @@ public class Test : MonoBehaviour
 
         public ValueTask OnPing(PingMessage message)
         {
-            sb.AppendLine(new DateTime(message.UtcTicks, DateTimeKind.Utc).ToLocalTime()
+            this.sb.AppendLine(new DateTime(message.UtcTicks, DateTimeKind.Utc).ToLocalTime()
                 .ToString(CultureInfo.InvariantCulture));
-            text.text = sb.ToString();
+            this.text.text = this.sb.ToString();
             return UniTask.CompletedTask.AsValueTask();
         }
     }
