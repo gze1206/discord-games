@@ -31,7 +31,7 @@ public unsafe struct BufferWriter
             var cur = node;
             node = node->Next;
             cur->Dispose();
-#if NET_6_OR_GREATER
+#if NET6_0_OR_GREATER
             NativeMemory.Free(cur);
 #else
             Marshal.FreeHGlobal(new IntPtr(cur));
@@ -49,7 +49,7 @@ public unsafe struct BufferWriter
         {
             var size = Unsafe.SizeOf<BufferSegment>();
             var segment =
-#if NET_6_OR_GREATER
+#if NET6_0_OR_GREATER
                 (BufferSegment*)NativeMemory.Alloc((nuint)size);
 #else
                 (BufferSegment*)Marshal.AllocHGlobal(size).ToPointer();
@@ -64,7 +64,7 @@ public unsafe struct BufferWriter
         return this.tail->RequestSpan(length);
     }
 
-    public void CopyTo(Span<byte> dest)
+    public void CopyTo(byte[] dest)
     {
         var index = 0;
         var node = this.head;

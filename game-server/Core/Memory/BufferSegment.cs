@@ -49,12 +49,12 @@ public unsafe struct BufferSegment
         return span;
     }
 
-    public void CopyTo(Span<byte> dest, int index)
+    public void CopyTo(byte[] dest, int index)
     {
 #if USE_BUFFER_MEMORY
-        this.memory!.Buffer.AsSpan(0, this.Used).CopyTo(dest[index..(index + this.Used)]);
+        this.memory!.Buffer.AsSpan(0, this.Used).CopyTo(dest.AsSpan(index, this.Used));
 #else
-        this.memory!.AsSpan(0, this.Used).CopyTo(dest[index..(index + this.Used)]);
+        this.memory!.AsSpan(0, this.Used).CopyTo(dest.AsSpan(index, this.Used));
 #endif
     }
 }

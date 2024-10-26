@@ -28,10 +28,10 @@ public class PinnedObjectHeapPool : IMemoryPool
     {
         return this.pool.TryDequeue(out var array)
             ? array
-#if NET_6_OR_GREATER
+#if NET6_0_OR_GREATER
             : GC.AllocateArray<byte>(MemoryPool.SegmentSize, pinned: true);
 #else
-            : new byte[MemoryPool.SegmentSize];
+            : throw new NotSupportedException("Cannot use POH when dotnet version is less than 6");
 #endif
     }
 
