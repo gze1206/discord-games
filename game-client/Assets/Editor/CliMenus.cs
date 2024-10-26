@@ -23,6 +23,12 @@ public class CliMenus
     {
         BuildCore("Debug");
     }
+    
+    [MenuItem("discord-games/Core/Build (Release)")]
+    public static void BuildCoreRelease()
+    {
+        BuildCore("Release");
+    }
 
     private static void BuildCore(string env)
     {
