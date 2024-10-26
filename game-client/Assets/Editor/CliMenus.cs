@@ -18,16 +18,36 @@ public class CliMenus
         "/usr/local/share/dotnet/dotnet";
 #endif
     
-    [MenuItem("discord-games/Core/Build (Debug)")]
-    public static void BuildCoreDebug()
+    [MenuItem("discord-games/Core/Build (Debug)", priority = 1)]
+    public static void BuildCoreForDebug()
     {
+        EditorUtility.DisplayProgressBar("Build Core", "디버그 빌드 시작", 0f);
         BuildCore("Debug");
+        EditorUtility.DisplayProgressBar("Build Core", "임포트", 0.5f);
+        AssetDatabase.Refresh();
+        EditorUtility.ClearProgressBar();
     }
     
-    [MenuItem("discord-games/Core/Build (Release)")]
-    public static void BuildCoreRelease()
+    [MenuItem("discord-games/Core/Build (Release)", priority = 2)]
+    public static void BuildCoreForRelease()
     {
+        EditorUtility.DisplayProgressBar("Build Core", "릴리즈 빌드 시작", 0f);
         BuildCore("Release");
+        EditorUtility.DisplayProgressBar("Build Core", "임포트", 0.5f);
+        AssetDatabase.Refresh();
+        EditorUtility.ClearProgressBar();
+    }
+
+    [MenuItem("discord-games/Core/Build (all)", priority = 0)]
+    public static void BuildCoreForAll()
+    {
+        EditorUtility.DisplayProgressBar("Build Core", "디버그 빌드 시작", 0f);
+        BuildCore("Debug");
+        EditorUtility.DisplayProgressBar("Build Core", "릴리즈 빌드 시작", 0.3f);
+        BuildCore("Release");
+        EditorUtility.DisplayProgressBar("Build Core", "임포트", 0.6f);
+        AssetDatabase.Refresh();
+        EditorUtility.ClearProgressBar();
     }
 
     private static void BuildCore(string env)
@@ -43,21 +63,31 @@ public class CliMenus
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.RedirectStandardError = true;
 
+        var hasOutput = false;
+        var hasError = false;
+        var stdout = new StringBuilder(env);
+        var stderr = new StringBuilder(env);
+        
         process.OutputDataReceived += (_, args) =>
         {
             if (string.IsNullOrEmpty(args.Data)) return;
-            Debug.Log(args.Data);
+            stdout.AppendLine(args.Data);
+            hasOutput = true;
         };
         process.ErrorDataReceived += (_, args) =>
         {
             if (string.IsNullOrEmpty(args.Data)) return;
-            Debug.LogError(args.Data);
+            stderr.AppendLine(args.Data);
+            hasError = true;
         };
         
         process.Start();
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
         process.WaitForExit();
+        
+        if (hasOutput) Debug.Log(stdout.ToString());
+        if (hasError) Debug.LogError(stderr.ToString());
 
         var buildDir = new DirectoryInfo($"../game-server/Core/bin/{env}/netstandard2.1");
         var outputDirPath = Path.Combine(Application.dataPath, $"Plugins/Core/{env}");
@@ -70,7 +100,5 @@ public class CliMenus
             file.CopyTo(dest, overwrite: true);
             Debug.Assert(File.Exists(dest));
         }
-        
-        AssetDatabase.Refresh();
     }
 }
