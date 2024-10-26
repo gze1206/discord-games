@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
         <RootNamespace>DiscordGames.Core</RootNamespace>
         <LangVersion>10</LangVersion>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <Nullable>enable</Nullable>
+        <TargetFrameworks>net6.0;net8.0;netstandard2.1</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>

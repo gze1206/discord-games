@@ -53,7 +53,7 @@ public class CliMenus
         process.BeginErrorReadLine();
         process.WaitForExit();
 
-        var buildDir = new DirectoryInfo($"../game-server/Core/bin/{env}/net6.0");
+        var buildDir = new DirectoryInfo($"../game-server/Core/bin/{env}/netstandard2.1");
         var outputDirPath = Path.Combine(Application.dataPath, $"Plugins/Core/{env}");
         Debug.Assert(buildDir.Exists);
         Directory.CreateDirectory(outputDirPath);

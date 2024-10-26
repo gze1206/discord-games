@@ -28,7 +28,11 @@ public class PinnedObjectHeapPool : IMemoryPool
     {
         return this.pool.TryDequeue(out var array)
             ? array
+#if NET_6_OR_GREATER
             : GC.AllocateArray<byte>(MemoryPool.SegmentSize, pinned: true);
+#else
+            : new byte[MemoryPool.SegmentSize];
+#endif
     }
 
     public void Return(byte[] buffer)

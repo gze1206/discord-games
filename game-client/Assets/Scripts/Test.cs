@@ -1,5 +1,6 @@
 using System;
 using DiscordGames.Core.Memory;
+using DiscordGames.Core.Memory.Pool;
 using DiscordGames.Core.Net.Serialize;
 using UnityEngine;
 
@@ -7,6 +8,8 @@ public class Test : MonoBehaviour
 {
     private void Start()
     {
+        MemoryPool.Init(new SmallObjectHeapPool());
+        
         var serialized =
             MessageSerializer.WritePingMessage(
                 DiscordGames.Core.Net.MessageChannel.Direct, DateTime.UtcNow.Ticks);
