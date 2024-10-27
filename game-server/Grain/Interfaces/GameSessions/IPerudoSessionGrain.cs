@@ -16,5 +16,5 @@ public interface IPerudoSessionGrain : IGameSessionGrain
     ValueTask<ChallengeResult> Challenge(UserId userId);
 
     [Alias("GetState")]
-    ValueTask<PerudoSessionState> GetState();
+    Task<PerudoSessionState> GetState();
 }

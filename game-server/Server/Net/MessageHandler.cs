@@ -25,13 +25,13 @@ public class MessageHandler : WebSocketBehavior, IMessageHandler
     protected override void OnClose(CloseEventArgs e)
     {
         this.logger.LogTrace("CLOSED : {reason} ({clean})", e.Reason, e.WasClean);
-        this.Sessions.CloseSession(this.ID);
+        if (this.Sessions.TryGetSession(this.ID, out _)) this.Sessions.CloseSession(this.ID);
     }
 
     protected override void OnError(ErrorEventArgs e)
     {
         this.logger.LogError("ERROR : {message}", e.Message);
-        this.Sessions.CloseSession(this.ID);
+        if (this.Sessions.TryGetSession(this.ID, out _)) this.Sessions.CloseSession(this.ID);
     }
 
     protected override void OnMessage(MessageEventArgs e)

@@ -63,11 +63,11 @@ public class WebSocketClient : IMessageHandler, IDisposable
 
     public ValueTask OnPing(PingMessage message)
     {
-        if (0 <= this.lastServerPingTicks)
-        {
-            var diff = message.UtcTicks - this.lastServerPingTicks;
-            Debug.WriteLine($"PING : {diff / TimeSpan.TicksPerMillisecond}ms");
-        }
+        // if (0 <= this.lastServerPingTicks)
+        // {
+        //     var diff = message.UtcTicks - this.lastServerPingTicks;
+        //     Debug.WriteLine($"PING : {diff / TimeSpan.TicksPerMillisecond}ms");
+        // }
 
         this.lastServerPingTicks = message.UtcTicks;
         this.SendPing();

@@ -26,7 +26,7 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
         this.logger = logger;
     }
 
-    public ValueTask<PerudoSessionState> GetState() => ValueTask.FromResult(this.State);
+    public Task<PerudoSessionState> GetState() => Task.FromResult(this.State);
 
     protected override async Task ReadStateAsync()
     {
