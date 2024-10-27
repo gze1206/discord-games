@@ -6,7 +6,7 @@ using DiscordGames.Server.Serialization.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using WebSocketSharp.Server;
+using WebSocketSharp.NetCore.Server;
 
 var webSocketServer = new WebSocketServer(9000);
 

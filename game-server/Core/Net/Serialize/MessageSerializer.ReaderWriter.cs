@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using DiscordGames.Core.Memory;
+using DiscordGames.Core.Net.Message;
 
 namespace DiscordGames.Core.Net.Serialize;
 
@@ -97,5 +98,50 @@ public static partial class MessageSerializer
         );
         span[1] = (byte)header.MessageType;
         return true;
+    }
+
+    public static GameType ReadGameType(this ref BufferReader reader)
+    {
+        return (GameType)reader.Slice(1)[0];
+    }
+
+    public static bool Write(this ref BufferWriter writer, GameType value)
+    {
+        writer.RequestSpan(1)[0] = (byte)value;
+        return true;
+    }
+
+    public static IHostGameData ReadIHostGameData(this ref BufferReader reader)
+    {
+        var type = (GameType)reader.Slice(1)[0];
+
+        switch (type)
+        {
+            case GameType.Perudo:
+            {
+                var maxPlayers = BitConverter.ToInt32(reader.Slice(sizeof(int)));
+                var isClassicRule = BitConverter.ToBoolean(reader.Slice(sizeof(bool)));
+                return new PerudoHostGameData(maxPlayers, isClassicRule);
+            }
+            default: throw new NotImplementedException();
+        }
+    }
+
+    public static bool Write(this ref BufferWriter writer, IHostGameData data)
+    {
+        var succeed = true;
+        switch (data)
+        {
+            case PerudoHostGameData perudo:
+            {
+                succeed &= writer.Write(GameType.Perudo);
+                succeed &= writer.Write(perudo.MaxPlayers);
+                succeed &= writer.Write(perudo.IsClassicRule);
+                break;
+            }
+            default: throw new NotImplementedException();
+        }
+
+        return succeed;
     }
 }

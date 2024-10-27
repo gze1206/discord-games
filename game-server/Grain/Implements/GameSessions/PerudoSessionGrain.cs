@@ -54,7 +54,7 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
         }
     }
 
-    public ValueTask<InitPerudoSessionResult> InitSession(UserId userId, int maxPlayer, bool isClassicRule)
+    public ValueTask<InitPerudoSessionResult> InitSession(UserId userId, string sessionName, int maxPlayer, bool isClassicRule)
     {
         using var logScope = this.logger.BeginScope("Perudo/InitSession");
         if (this.State.IsPlaying) return ValueTask.FromResult(InitPerudoSessionResult.AlreadyStarted);
@@ -62,6 +62,7 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
         if (maxPlayer is < DefaultMinPlayer or > DefaultMaxPlayer) return ValueTask.FromResult(InitPerudoSessionResult.InvalidMaxPlayer);
 
         this.State.HostUserId = userId;
+        this.State.SessionName = sessionName;
         this.State.MaxPlayer = maxPlayer;
         this.State.IsClassicRule = isClassicRule;
         this.State.IsInitialized = true;
@@ -69,7 +70,7 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
 
         this.playerInfoSelector = new PlayerInfoSelector(isClassicRule ? 5 : 3);
         
-        this.logger.LogPerudoInitSessionOk(this.GetPrimaryKey(), userId, maxPlayer, isClassicRule);
+        this.logger.LogPerudoInitSessionOk(this.GetPrimaryKey(), userId, sessionName, maxPlayer, isClassicRule);
         
         return ValueTask.FromResult(InitPerudoSessionResult.Ok);
     }
@@ -357,8 +358,8 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
 public static partial class Log
 {
     [LoggerMessage(LogLevel.Information,
-        Message = "Session {session} initialized by {userId} [maxPlayer : {maxPlayer}, isClassicRule : {isClassicRule}]")]
-    public static partial void LogPerudoInitSessionOk(this ILogger logger, Guid session, UserId userId, int maxPlayer, bool isClassicRule);
+        Message = "Session {sessionName}({session}) initialized by {userId} [maxPlayer : {maxPlayer}, isClassicRule : {isClassicRule}]")]
+    public static partial void LogPerudoInitSessionOk(this ILogger logger, Guid session, UserId userId, string sessionName, int maxPlayer, bool isClassicRule);
     
     [LoggerMessage(LogLevel.Information,
         Message = "New round started from {session} [firstPlayer : {firstUserId}]")]

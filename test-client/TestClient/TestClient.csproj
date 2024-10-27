@@ -7,11 +7,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="WebSocketSharp" Version="1.0.3-rc11" />
+      <ProjectReference Include="..\..\game-server\Core\Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Core\Core.csproj" />
+      <PackageReference Include="WebSocketSharp.NetCore" Version="1.0.0" />
     </ItemGroup>
 
 </Project>

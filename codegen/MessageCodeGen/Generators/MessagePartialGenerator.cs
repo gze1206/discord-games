@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CodeGenCore;
 using Microsoft.CodeAnalysis;
 
 using static MessageCodeGen.Utils;

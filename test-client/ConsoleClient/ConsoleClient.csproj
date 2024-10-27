@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Core\Core.csproj" />
+      <ProjectReference Include="..\..\game-server\Core\Core.csproj" />
       <ProjectReference Include="..\TestClient\TestClient.csproj" />
     </ItemGroup>
 
@@ -17,7 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Include="..\GlobalUsings.cs">
+      <Compile Include="..\..\game-server\GlobalUsings.cs">
         <Link>GlobalUsings.cs</Link>
       </Compile>
     </ItemGroup>

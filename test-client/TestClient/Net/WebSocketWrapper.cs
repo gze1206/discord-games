@@ -1,6 +1,7 @@
+using System.Diagnostics;
 using DiscordGames.Core.Net;
 using DiscordGames.Core.Net.Serialize;
-using WebSocketSharp;
+using WebSocketSharp.NetCore;
 
 namespace TestClient.Net;
 
@@ -26,6 +27,7 @@ public class WebSocketWrapper : IDisposable
 
     public void Dispose()
     {
+        this.socket.Close();
         ((IDisposable)this.socket).Dispose();
         GC.SuppressFinalize(this);
     }
@@ -37,6 +39,11 @@ public class WebSocketWrapper : IDisposable
 
     private void OnMessage(object? sender, MessageEventArgs e)
     {
+        if (!e.IsBinary)
+        {
+            Debug.WriteLine(e.IsText ? e.Data : "(ping)");
+            return;
+        }
         MessageSerializer.Read(e.RawData, this.handler);
     }
 }

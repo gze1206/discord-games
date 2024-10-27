@@ -24,6 +24,7 @@ public class WebSocketClient : IMessageHandler, IDisposable
 
     private void OnOpen()
     {
+        Console.WriteLine("Connected!");
         this.wrapper.Send(MessageSerializer.WriteGreetingMessage(MessageChannel.Direct, -1, Constants.MockDiscordUid));
     }
 
@@ -37,6 +38,13 @@ public class WebSocketClient : IMessageHandler, IDisposable
         this.wrapper.Dispose();
         GC.SuppressFinalize(this);
     }
+
+    public void HostPerudo(int maxPlayers, bool isClassicRule)
+        => this.wrapper.Send(MessageSerializer.WriteHostGameMessage(
+            MessageChannel.Direct,
+            Guid.NewGuid().ToString(),
+            new PerudoHostGameData(maxPlayers, isClassicRule)
+        ));
     
     public ValueTask OnGreeting(GreetingMessage message)
     {
@@ -66,4 +74,6 @@ public class WebSocketClient : IMessageHandler, IDisposable
         
         return ValueTask.CompletedTask;
     }
+
+    public ValueTask OnHostGame(HostGameMessage message) => throw new InvalidOperationException();
 }

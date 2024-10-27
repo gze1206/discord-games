@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
-namespace MessageCodeGen
+namespace CodeGenCore
 {
     [SuppressMessage("Design", "CA1034:중첩 형식을 표시하지 않아야 합니다.")]
     [SuppressMessage("Performance", "CA1815:값 형식에서 Equals 또는 같음 연산자를 재정의하세요.")]
@@ -10,7 +10,7 @@ namespace MessageCodeGen
     {
         private readonly StringBuilder builder;
 
-        internal int indentLevel;
+        private int indentLevel;
 
         public override string ToString() => this.builder.ToString();
 
@@ -41,16 +41,16 @@ namespace MessageCodeGen
         {
             private readonly CodeWriter writer;
             private readonly bool withTrailSemicolon;
-            
+                
             internal Block(CodeWriter writer, bool withTrailSemicolon = false)
             {
                 this.writer = writer;
                 this.withTrailSemicolon = withTrailSemicolon;
-                
+                    
                 this.writer.Write("{");
                 this.writer.indentLevel++;
             }
-            
+                
             public void Dispose()
             {
                 this.writer.indentLevel--;
@@ -75,3 +75,4 @@ namespace MessageCodeGen
         }
     }
 }
+

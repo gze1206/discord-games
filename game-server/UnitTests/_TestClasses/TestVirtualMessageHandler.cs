@@ -9,4 +9,6 @@ public class TestVirtualMessageHandler : IMessageHandler
     public virtual ValueTask OnPing(PingMessage message) { return ValueTask.CompletedTask; }
 
     public virtual ValueTask OnGreeting(GreetingMessage message) { return ValueTask.CompletedTask; }
+
+    public ValueTask OnHostGame(HostGameMessage message) => throw new InvalidOperationException();
 }

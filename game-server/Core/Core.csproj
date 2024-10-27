@@ -9,11 +9,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\MessageCodeGen\MessageCodeGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+      <PackageReference Include="LinqGen" Version="0.3.1" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="LinqGen" Version="0.3.1" />
+        <ProjectReference Include="..\..\codegen\MessageCodeGen\MessageCodeGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <ProjectReference Include="..\..\codegen\CodeGenCore\CodeGenCore.csproj" OutputItemType="Analyzer" />
     </ItemGroup>
 
 </Project>
