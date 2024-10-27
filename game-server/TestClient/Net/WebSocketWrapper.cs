@@ -6,6 +6,8 @@ namespace TestClient.Net;
 
 public class WebSocketWrapper : IDisposable
 {
+    public event Action OnOpen = () => { };
+    
     private readonly WebSocket socket;
     private readonly IMessageHandler handler;
 
@@ -14,13 +16,18 @@ public class WebSocketWrapper : IDisposable
         this.socket = new WebSocket(url);
         this.handler = handler;
         this.socket.OnMessage += this.OnMessage;
+        this.socket.OnOpen += (_, _) => OnOpen();
+    }
+
+    public void Connect()
+    {
         this.socket.Connect();
     }
 
     public void Dispose()
     {
-        GC.SuppressFinalize(this);
         ((IDisposable)this.socket).Dispose();
+        GC.SuppressFinalize(this);
     }
 
     public void Send(byte[] data)

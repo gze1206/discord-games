@@ -19,10 +19,6 @@ public class MessageHandler : WebSocketBehavior, IMessageHandler
 
     protected override void OnMessage(MessageEventArgs e)
     {
-        // if (!int.TryParse(e.Data, out var userId)) userId = 0;
-        // var session = ServiceLocator.GrainFactory.GetGrain<IPerudoSessionGrain>(new Guid());
-        // var result = session.JoinPlayer(userId).GetAwaiter().GetResult();
-        // this.Send(e.Data + result);
         if (!e.IsBinary)
         {
             this.logger.LogMessageWasNotBinary(e.IsText ? e.Data : "(ping)");

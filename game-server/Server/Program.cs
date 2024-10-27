@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using DiscordGames.Core.Memory.Pool;
 using DiscordGames.Server;
 using DiscordGames.Server.Net;
 using DiscordGames.Server.Serialization.Json;
@@ -11,6 +12,8 @@ var webSocketServer = new WebSocketServer(9000);
 
 try
 {
+    MemoryPool.Init(new PinnedObjectHeapPool());
+    
     webSocketServer.AddWebSocketService<MessageHandler>("/");
     webSocketServer.Start();
     
