@@ -1,22 +1,11 @@
-﻿using System.Net;
-using DiscordGames.Core.Memory.Pool;
-using DiscordGames.Server;
-using DiscordGames.Server.Net;
+﻿using DiscordGames.Server;
 using DiscordGames.Server.Serialization.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using WebSocketSharp.NetCore.Server;
-
-var webSocketServer = new WebSocketServer(9000);
 
 try
 {
-    MemoryPool.Init(new PinnedObjectHeapPool());
-    
-    webSocketServer.AddWebSocketService<MessageHandler>("/");
-    webSocketServer.Start();
-    
     var builder = Host.CreateDefaultBuilder(args)
         .UseOrleans(silo =>
         {
@@ -43,11 +32,8 @@ try
         loggingBuilder.AddSimpleConsole(options => options.IncludeScopes = true);
     });
     
-    Console.WriteLine("WebSocket Listening on {0}:{1}...", webSocketServer.Address ?? IPAddress.Loopback, webSocketServer.Port.ToString());
-
     await host.RunAsync();
 }
 finally
 {
-    webSocketServer.Stop();
 }
