@@ -1,12 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using CodeGenCore;
 using MessageCodeGen.Generators;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Text;
 
 namespace MessageCodeGen
 {
@@ -41,11 +39,11 @@ namespace MessageCodeGen
                 MessageTypeGenerator.Generate(messages, type)
             );
 
-            context.AddSource("Message.g.cs", SourceText.From(messagePartials.ToString(), Encoding.UTF8));
-            context.AddSource("MessageHandler.g.cs", SourceText.From(handler.ToString(), Encoding.UTF8));
-            context.AddSource("MessageSerializer.Buffer.g.cs", SourceText.From(bufferReadWrite.ToString(), Encoding.UTF8));
-            context.AddSource("MessageSerializer.ReadWrite.g.cs", SourceText.From(readWrite.ToString(), Encoding.UTF8));
-            context.AddSource("MessageType.g.cs", SourceText.From(type.ToString(), Encoding.UTF8));
+            context.AddSource("Message.g.cs", messagePartials.ToSourceText());
+            context.AddSource("MessageHandler.g.cs", handler.ToSourceText());
+            context.AddSource("MessageSerializer.Buffer.g.cs", bufferReadWrite.ToSourceText());
+            context.AddSource("MessageSerializer.ReadWrite.g.cs", readWrite.ToSourceText());
+            context.AddSource("MessageType.g.cs", type.ToSourceText());
         }
     }
 }

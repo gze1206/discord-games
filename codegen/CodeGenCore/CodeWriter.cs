@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
+using Microsoft.CodeAnalysis.Text;
 
 namespace CodeGenCore
 {
@@ -19,6 +20,8 @@ namespace CodeGenCore
             this.builder = new();
             this.indentLevel = 0;
         }
+        
+        public SourceText ToSourceText() => SourceText.From(this.builder.ToString(), Encoding.UTF8);
 
         public void Write(string line)
         {

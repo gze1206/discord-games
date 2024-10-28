@@ -81,7 +81,7 @@ public static partial class MessageSerializer
         var buffer = reader.Slice(MessageHeader.HeaderSize);
         
         var version = (byte)((buffer[0] & VersionMask) >> VersionBits);
-        if (version != SchemeVersion) throw MessageSchemeVersionException.I;
+        if (version != SchemeVersion) ThrowHelper.ThrowSchemeVersion();
         
         var channel = (MessageChannel)(buffer[0] & ~VersionMask);
         var type = (MessageType)buffer[1];

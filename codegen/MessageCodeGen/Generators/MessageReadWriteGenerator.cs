@@ -41,7 +41,7 @@ namespace MessageCodeGen.Generators
                 writer.Write("var payloadSize = buffer.Length - sizeof(int);");
                 writer.Write("var checksum = BitConverter.ToUInt32(buffer.AsSpan(payloadSize));");
                 writer.Write("var actualChecksum = CalcChecksum(buffer.AsSpan(0, payloadSize));");
-                writer.Write("if (checksum != actualChecksum) throw InvalidMessageChecksumException.I;");
+                writer.Write("if (checksum != actualChecksum) ThrowHelper.ThrowChecksum();");
                 writer.Write();
                 writer.Write("var reader = new BufferReader(buffer);");
                 writer.Write("var header = reader.ReadHeader();");

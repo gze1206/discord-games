@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ThrowHelper>
+    <Usings>
+        <Using>System</Using>
+    </Usings>
+    <Exceptions>
+        <Exception Name="InvalidTurnOrderState" Type="InvalidOperationException" Message="State의 현재 턴 정보와 턴 순서 정보가 불일치함" />
+        <Exception Name="InvalidTurnPlaying" Type="InvalidOperationException" Message="탈락자의 턴이 진행 중입니다" />
+    </Exceptions>
+</ThrowHelper>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ThrowHelper>
+    <Usings>
+        <Using>System</Using>
+        <Using>DiscordGames.Core.Net</Using>
+    </Usings>
+    <Exceptions>
+        <Exception Type="InvalidOperationException" />
+        <Exception Name="SchemeVersion" Type="MessageSchemeVersionException" Message="메시지의 SchemeVersion이 유효하지 않습니다." />
+        <Exception Name="Checksum" Type="MessageChecksumException" Message="메시지의 Checksum이 유효하지 않습니다." />
+    </Exceptions>
+</ThrowHelper>

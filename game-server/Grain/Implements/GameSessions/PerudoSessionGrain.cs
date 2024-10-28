@@ -35,7 +35,7 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
         if (this.currentTurnInfo == null && 0 <= this.State.CurrentTurn)
         {
             if (this.State.TurnOrder.Count <= this.State.CurrentTurn)
-                throw new InvalidOperationException("State의 현재 턴 정보와 턴 순서 정보가 불일치함");
+                ThrowHelper.ThrowInvalidTurnOrderState();
             
             this.totalDices = 0;
             this.currentTurnInfo = this.State.TurnOrder[this.State.CurrentTurn];
@@ -183,7 +183,7 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
         if (quantity < 1 || this.totalDices < quantity) return ValueTask.FromResult(PlaceBidResult.InvalidQuantity);
         if (face is < 1 or > 6) return ValueTask.FromResult(PlaceBidResult.InvalidFace);
 
-        if (!this.currentTurnInfo.IsAlive) throw new InvalidOperationException("탈락자의 턴이 진행 중입니다");
+        if (!this.currentTurnInfo.IsAlive) ThrowHelper.ThrowInvalidTurnPlaying();
         
         var lastQuantity = this.State.LastBidQuantity;
         var lastFace = this.State.LastBidFace;
@@ -230,7 +230,7 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
             if (lastBidder < 0 || self.lastBidderInfo == null) return ChallengeResult.NoPreviousBid;
             if (self.currentTurnInfo?.UserId != userId) return ChallengeResult.NotFromCurrentTurnUser;
 
-            if (!self.currentTurnInfo.IsAlive) throw new InvalidOperationException("탈락자의 턴이 진행 중입니다");
+            if (!self.currentTurnInfo.IsAlive) ThrowHelper.ThrowInvalidTurnPlaying();
 
             var lastBidQuantity = self.State.LastBidQuantity;
             var face = self.State.LastBidFace;

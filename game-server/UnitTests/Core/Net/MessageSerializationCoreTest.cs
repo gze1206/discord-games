@@ -73,7 +73,7 @@ public class MessageSerializationCoreTest
     }
     
     [TestMethod]
-    public async Task MessageSerializer__직렬화_후_Checksum_변조하고_다시_역직렬화하여_원본과_비교__예외_InvalidMessageChecksumException()
+    public async Task MessageSerializer__직렬화_후_Checksum_변조하고_다시_역직렬화하여_원본과_비교__예외_MessageChecksumException()
     {
         // Arrange
         var handler = new PingTestHandler(100);
@@ -91,7 +91,7 @@ public class MessageSerializationCoreTest
 
             MessageSerializer.Read(binary, handler);
         }
-        catch (InvalidMessageChecksumException)
+        catch (MessageChecksumException)
         {
             // Assert
             Assert.IsFalse(await handler.Wait());

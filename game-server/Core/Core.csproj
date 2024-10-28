@@ -14,7 +14,12 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\codegen\MessageCodeGen\MessageCodeGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <ProjectReference Include="..\..\codegen\ThrowHelperCodeGen\ThrowHelperCodeGen.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
         <ProjectReference Include="..\..\codegen\CodeGenCore\CodeGenCore.csproj" OutputItemType="Analyzer" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="ThrowHelper.xml" />
     </ItemGroup>
 
 </Project>

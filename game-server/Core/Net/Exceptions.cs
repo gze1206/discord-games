@@ -1,13 +1,18 @@
+using System;
+
 namespace DiscordGames.Core.Net;
 
-public class MessageSchemeVersionException : ExceptionWithInstance<MessageSchemeVersionException>
+public abstract class MessageException : Exception
 {
-    public MessageSchemeVersionException() : base("메시지의 SchemeVersion이 유효하지 않습니다.")
-    { }
+    protected MessageException(string message) : base(message) { }
 }
 
-public class InvalidMessageChecksumException : ExceptionWithInstance<InvalidMessageChecksumException>
+public class MessageSchemeVersionException : MessageException
 {
-    public InvalidMessageChecksumException() : base("메시지의 Checksum이 유효하지 않습니다.")
-    { }
+    public MessageSchemeVersionException(string message) : base(message) { }
+}
+
+public class MessageChecksumException : MessageException
+{
+    public MessageChecksumException(string message) : base(message) { }
 }
