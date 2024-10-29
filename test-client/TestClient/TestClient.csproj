@@ -10,4 +10,8 @@
       <ProjectReference Include="..\..\game-server\Core\Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="PooledAwait" Version="1.0.49" />
+    </ItemGroup>
+
 </Project>

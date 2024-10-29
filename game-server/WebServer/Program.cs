@@ -1,4 +1,7 @@
+using DiscordGames.Core.Memory.Pool;
 using WebServer.Net;
+
+MemoryPool.Init(new PinnedObjectHeapPool());
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://localhost:9000");
@@ -32,7 +35,10 @@ app.Use(async (context, next) =>
         if (context.WebSockets.IsWebSocketRequest)
         {
             using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-            var conn = new Connection(webSocket, context.RequestServices.GetRequiredService<ILogger<Connection>>());
+            var conn = new Connection(webSocket,
+                context.Connection.RemoteIpAddress?.ToString() ?? "(Unknown)",
+                context.RequestServices.GetRequiredService<ILogger<Connection>>());
+            
             await conn.Loop(CancellationToken.None);
         }
         else
