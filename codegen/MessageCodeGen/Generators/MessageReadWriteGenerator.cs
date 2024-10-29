@@ -50,7 +50,7 @@ namespace MessageCodeGen.Generators
                 writer.Write("if (checksum != actualChecksum) ThrowHelper.ThrowChecksum();");
                 writer.Write();
                 writer.Write("// Mark as read message prefix");
-                writer.Write("reader.Slice(MessagePrefixSize);");
+                writer.Write("reader.AdvanceReadOffset(MessagePrefixSize);");
                 writer.Write();
                 writer.Write("// Read message header and payload");
                 writer.Write("var header = reader.ReadHeader();");
@@ -71,7 +71,7 @@ namespace MessageCodeGen.Generators
                 }
                 writer.Write();
                 writer.Write("// Marking as read message postfix");
-                writer.Write("reader.Slice(MessagePostfixSize);");
+                writer.Write("reader.AdvanceReadOffset(MessagePostfixSize);");
             }
         }
 

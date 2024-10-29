@@ -44,9 +44,12 @@ public struct BufferReader
         }
     }
 
-    public void RollbackOffset()
+    public void AdvanceReadOffset(int length)
     {
-        this.readOffset = 0;
+        var readFrom = this.readSegmentFrom + this.readOffset;
+        if (this.writeSegmentFrom < readFrom + length) ThrowHelper.ThrowReadBufferOutOfRange();
+        
+        this.readOffset += length;
     }
 
     public bool AdvanceRead()
