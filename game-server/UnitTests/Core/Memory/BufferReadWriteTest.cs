@@ -27,6 +27,8 @@ public class BufferReadWriteTest
         writer.Dispose();
 
         var reader = new BufferReader(arr);
+        reader.AdvanceWrite(written);
+        
         var actual = reader.ReadByte();
         
         // Assert
@@ -55,6 +57,8 @@ public class BufferReadWriteTest
         writer.Dispose();
 
         var reader = new BufferReader(arr);
+        reader.AdvanceWrite(written);
+        
         var actual = reader.ReadInt32();
         
         // Assert
@@ -83,6 +87,8 @@ public class BufferReadWriteTest
         writer.Dispose();
 
         var reader = new BufferReader(arr);
+        reader.AdvanceWrite(written);
+        
         var actual = reader.ReadInt64();
         
         // Assert
@@ -112,6 +118,8 @@ public class BufferReadWriteTest
         writer.Dispose();
 
         var reader = new BufferReader(arr);
+        reader.AdvanceWrite(written);
+        
         var actual = reader.ReadString();
         
         // Assert

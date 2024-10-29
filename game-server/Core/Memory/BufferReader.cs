@@ -15,6 +15,8 @@ public struct BufferReader
 
     public ArraySegment<byte> WriteSegment =>
         new(this.buffer.Array!, this.buffer.Offset + this.writeSegmentFrom, this.FreeSize);
+    public ReadOnlySpan<byte> ReadSegment =>
+        new(this.buffer.Array!, this.readSegmentFrom, this.DataSize);
 
     public BufferReader(ArraySegment<byte> buffer)
     {
@@ -40,6 +42,11 @@ public struct BufferReader
             this.readSegmentFrom = 0;
             this.writeSegmentFrom = dataSize;
         }
+    }
+
+    public void RollbackOffset()
+    {
+        this.readOffset = 0;
     }
 
     public bool AdvanceRead()

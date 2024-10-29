@@ -1,4 +1,5 @@
 using System.Text;
+using DiscordGames.Core.Memory;
 using DiscordGames.Core.Net;
 using DiscordGames.Core.Net.Message;
 using DiscordGames.Core.Net.Serialize;
@@ -63,7 +64,11 @@ public class MessageSerializationCoreTest
 
         // Act
         var binary = MessageSerializer.Write(ref expected);
-        MessageSerializer.Read(binary, handler);
+        
+        var reader = new BufferReader(binary);
+        reader.AdvanceWrite(binary.Length);
+
+        reader.ReadAndHandleMessage(handler);
 
         var isSucceed = await handler.Wait();
         
@@ -89,7 +94,10 @@ public class MessageSerializationCoreTest
             var binary = MessageSerializer.Write(ref expected);
             binary[^1] = (byte)((binary[^1] + 1) % byte.MaxValue);
 
-            MessageSerializer.Read(binary, handler);
+            var reader = new BufferReader(binary);
+            reader.AdvanceWrite(binary.Length);
+
+            reader.ReadAndHandleMessage(handler);
         }
         catch (MessageChecksumException)
         {
@@ -115,7 +123,11 @@ public class MessageSerializationCoreTest
         try
         {
             var binary = MessageSerializer.Write(ref expected);
-            MessageSerializer.Read(binary, handler);
+            
+            var reader = new BufferReader(binary);
+            reader.AdvanceWrite(binary.Length);
+
+            reader.ReadAndHandleMessage(handler);
         }
         catch (MessageSchemeVersionException)
         {

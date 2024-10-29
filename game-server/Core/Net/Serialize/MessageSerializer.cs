@@ -6,11 +6,15 @@ namespace DiscordGames.Core.Net.Serialize;
 
 public static partial class MessageSerializer
 {
+    // ReSharper disable once MemberCanBePrivate.Global
     internal const byte SchemeVersion = 1;
     
     private const int VersionBits = 4;
     private const byte VersionMask = byte.MaxValue & (byte.MaxValue << VersionBits);
+    private const int MessagePrefixSize = sizeof(byte);     // message size (1 byte)
+    private const int MessagePostfixSize = sizeof(int);     // CRC Checksum (4 byte)
 
+    // ReSharper disable once MemberCanBePrivate.Global
     internal static uint CalcChecksum(ReadOnlySpan<byte> payload)
     {
         var crc = 0xFFFFFFFF;

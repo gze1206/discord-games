@@ -35,17 +35,25 @@ namespace MessageCodeGen.Generators
 
         private static void GenRead(IReadOnlyList<INamedTypeSymbol> messages, CodeWriter writer)
         {
-            writer.Write("public static void Read(byte[] buffer, IMessageHandler handler)");
+            writer.Write("public static void ReadAndHandleMessage(this ref BufferReader reader, IMessageHandler handler)");
             using (writer.BeginBlock())
             {
-                writer.Write("var payloadSize = buffer.Length - sizeof(int);");
-                writer.Write("var checksum = BitConverter.ToUInt32(buffer.AsSpan(payloadSize));");
-                writer.Write("var actualChecksum = CalcChecksum(buffer.AsSpan(0, payloadSize));");
+                writer.Write("var readSpan = reader.ReadSegment;");
+                writer.Write("if (readSpan.Length < MessagePrefixSize) return;");
+                writer.Write();
+                writer.Write("var expectedMessageSize = readSpan[0];");
+                writer.Write("var messageSize = readSpan.Length - MessagePrefixSize - MessagePostfixSize;");
+                writer.Write("if (messageSize < expectedMessageSize) return;");
+                writer.Write();
+                writer.Write("var checksum = BitConverter.ToUInt32(readSpan.Slice(messageSize + MessagePrefixSize));");
+                writer.Write("var actualChecksum = CalcChecksum(readSpan.Slice(MessagePrefixSize, messageSize));");
                 writer.Write("if (checksum != actualChecksum) ThrowHelper.ThrowChecksum();");
                 writer.Write();
-                writer.Write("var reader = new BufferReader(buffer);");
-                writer.Write("var header = reader.ReadHeader();");
+                writer.Write("// Mark as read message prefix");
+                writer.Write("reader.Slice(MessagePrefixSize);");
                 writer.Write();
+                writer.Write("// Read message header and payload");
+                writer.Write("var header = reader.ReadHeader();");
                 writer.Write("switch (header.MessageType)");
                 using (writer.BeginBlock())
                 {
@@ -61,6 +69,9 @@ namespace MessageCodeGen.Generators
                     }
                     writer.Write("default: throw new NotImplementedException();");
                 }
+                writer.Write();
+                writer.Write("// Marking as read message postfix");
+                writer.Write("reader.Slice(MessagePostfixSize);");
             }
         }
 
@@ -74,13 +85,17 @@ namespace MessageCodeGen.Generators
                     writer.Write("var writer = new BufferWriter();");
                     writer.Write("writer.Write(message);");
                     writer.Write();
-                    writer.Write("var size = writer.UsedTotal;");
-                    writer.Write("var buffer = new byte[size + sizeof(int)];");
-                    writer.Write("writer.CopyTo(buffer);");
+                    writer.Write("var messageSize = writer.UsedTotal;");
+                    writer.Write("var buffer = new byte[messageSize + MessagePrefixSize + MessagePostfixSize];");
+                    writer.Write("writer.CopyTo(buffer, MessagePrefixSize);");
                     writer.Write("writer.Dispose();");
                     writer.Write();
-                    writer.Write("var checksum = CalcChecksum(buffer.AsSpan(0, size));");
-                    writer.Write("BitConverter.TryWriteBytes(buffer.AsSpan(size), checksum);");
+                    writer.Write("// Message Prefix");
+                    writer.Write("buffer[0] = (byte)messageSize;");
+                    writer.Write();
+                    writer.Write("// Message Postfix");
+                    writer.Write("var checksum = CalcChecksum(buffer.AsSpan(MessagePrefixSize, messageSize));");
+                    writer.Write("BitConverter.TryWriteBytes(buffer.AsSpan(messageSize + MessagePrefixSize), checksum);");
                     writer.Write("return buffer;");
                 }
                 writer.Write();

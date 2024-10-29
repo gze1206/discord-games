@@ -64,9 +64,9 @@ public unsafe struct BufferWriter
         return this.tail->RequestSpan(length);
     }
 
-    public void CopyTo(byte[] dest)
+    public void CopyTo(byte[] dest, int begin = 0)
     {
-        var index = 0;
+        var index = begin;
         var node = this.head;
         while (node != null)
         {
