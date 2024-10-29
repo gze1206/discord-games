@@ -4,20 +4,68 @@ namespace DiscordGames.Core.Memory;
 
 public struct BufferReader
 {
-    private readonly byte[] buffer;
+    private readonly ArraySegment<byte> buffer;
 
-    public int Index { get; private set; }
+    private int readSegmentFrom;
+    private int writeSegmentFrom;
+    private int readOffset;
 
-    public BufferReader(byte[] buffer)
+    public int DataSize => this.writeSegmentFrom - this.readSegmentFrom;
+    public int FreeSize => this.buffer.Count - this.writeSegmentFrom;
+
+    public ArraySegment<byte> WriteSegment =>
+        new(this.buffer.Array!, this.buffer.Offset + this.writeSegmentFrom, this.FreeSize);
+
+    public BufferReader(ArraySegment<byte> buffer)
     {
         this.buffer = buffer;
-        this.Index = 0;
+        this.readSegmentFrom = 0;
+        this.writeSegmentFrom = 0;
+        this.readOffset = 0;
     }
 
-    internal ReadOnlySpan<byte> Slice(int length)
+    public void Compact()
     {
-        var span = this.buffer.AsSpan(this.Index, length);
-        this.Index += length;
+        var dataSize = this.DataSize;
+
+        if (dataSize == 0)
+        {
+            this.readSegmentFrom = this.writeSegmentFrom = 0;
+        }
+        else
+        {
+            Array.Copy(this.buffer.Array!, this.buffer.Offset + this.readSegmentFrom,
+                this.buffer.Array!, this.buffer.Offset, dataSize);
+
+            this.readSegmentFrom = 0;
+            this.writeSegmentFrom = dataSize;
+        }
+    }
+
+    public bool AdvanceRead()
+    {
+        if (this.writeSegmentFrom < this.readSegmentFrom + this.readOffset) return false;
+
+        this.readSegmentFrom += this.readOffset;
+        this.readOffset = 0;
+        return true;
+    }
+
+    public bool AdvanceWrite(int length)
+    {
+        if (this.FreeSize < length) return false;
+
+        this.writeSegmentFrom += length;
+        return true;
+    }
+
+    public ReadOnlySpan<byte> Slice(int length)
+    {
+        var readFrom = this.readSegmentFrom + this.readOffset;
+        if (this.writeSegmentFrom < readFrom + length) ThrowHelper.ThrowReadBufferOutOfRange();
+        
+        var span = this.buffer.AsSpan(readFrom, length);
+        this.readOffset += length;
         return span;
     }
 }

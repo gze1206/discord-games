@@ -1,3 +1,5 @@
+using WebServer.Net;
+
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://localhost:9000");
 
@@ -25,6 +27,8 @@ app.Use(async (context, next) =>
         if (context.WebSockets.IsWebSocketRequest)
         {
             using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+            var conn = new Connection(webSocket);
+            await conn.Loop(CancellationToken.None);
         }
         else
         {
