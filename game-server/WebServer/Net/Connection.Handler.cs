@@ -7,16 +7,22 @@ public partial class Connection : IMessageHandler
 {
     public ValueTask OnGreeting(GreetingMessage message)
     {
-        throw new NotImplementedException();
+        this.logger.LogInformation("GREETING [{discordUid}]", message.DiscordUid);
+        
+        return ValueTask.CompletedTask;
     }
 
     public ValueTask OnPing(PingMessage message)
     {
-        throw new NotImplementedException();
+        this.logger.LogInformation("PING [{ticks}]", message.UtcTicks);
+        
+        return ValueTask.CompletedTask;
     }
 
     public ValueTask OnHostGame(HostGameMessage message)
     {
-        throw new NotImplementedException();
+        this.logger.LogInformation("HOST [{name}]", message.Name);
+        
+        return ValueTask.CompletedTask;
     }
 }

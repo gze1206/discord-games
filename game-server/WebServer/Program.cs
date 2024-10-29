@@ -8,6 +8,11 @@ builder.WebHost.UseUrls("http://localhost:9000");
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddLogging(logging =>
+{
+    logging.AddSimpleConsole(options => options.IncludeScopes = true);
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -27,7 +32,7 @@ app.Use(async (context, next) =>
         if (context.WebSockets.IsWebSocketRequest)
         {
             using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-            var conn = new Connection(webSocket);
+            var conn = new Connection(webSocket, context.RequestServices.GetRequiredService<ILogger<Connection>>());
             await conn.Loop(CancellationToken.None);
         }
         else

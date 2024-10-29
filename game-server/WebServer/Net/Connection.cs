@@ -11,13 +11,15 @@ public partial class Connection
     private const int ReadBufferSize = 1024;
     
     private readonly WebSocket socket;
-    
-    private BufferReader readBuffer;
+    private readonly ILogger<Connection> logger;
 
-    public Connection(WebSocket socket)
+    private BufferReader bufferReader;
+
+    public Connection(WebSocket socket, ILogger<Connection> logger)
     {
         this.socket = socket;
-        this.readBuffer = new BufferReader(GC.AllocateArray<byte>(ReadBufferSize, pinned: true));
+        this.logger = logger;
+        this.bufferReader = new BufferReader(GC.AllocateArray<byte>(ReadBufferSize, pinned: true));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -33,27 +35,36 @@ public partial class Connection
         {
             while (self.socket.State == WebSocketState.Open && !cancellationToken.IsCancellationRequested)
             {
-                self.readBuffer.Compact();
-                var receiveResult = await self.socket.ReceiveAsync(self.readBuffer.WriteSegment, cancellationToken);
-                // if (receiveResult.MessageType == WebSocketMessageType.Text) continue;
+                // 먼저 '읽기 영역'을 버퍼의 가장 앞쪽으로 당겨옵니다 ('쓰기 영역' 공간 확보를 위해)
+                self.bufferReader.Compact();
+                
+                var receiveResult = await self.socket.ReceiveAsync(self.bufferReader.WriteSegment, cancellationToken);
+                self.logger.LogInformation("RECEIVED [{type}, {isEndOfMessage}, {count}]", receiveResult.MessageType.ToString(), receiveResult.EndOfMessage, receiveResult.Count);
+                
+                // 텍스트 데이터는 받지 않고, 바이트로 직렬화된 것만 받습니다
+                if (receiveResult.MessageType == WebSocketMessageType.Text) continue;
+                
+                // 접속 종료 메시지라면 접속 해제 처리를 합니다
                 if (receiveResult.MessageType == WebSocketMessageType.Close)
                 {
                     await self.Disconnect(cancellationToken);
                     break;
                 }
+                
+                // 데이터 크기가 0 이하라면 바로 다음 데이터를 받기 위해 돌아갑니다
                 if (receiveResult.Count <= 0) continue;
 
-                if (!self.readBuffer.AdvanceWrite(receiveResult.Count))
+                // 버퍼에 데이터가 기록되었으니 '쓰기 영역'을 그 크기만큼 전진시킵니다 (이걸 실패하면 비정상이니 연결을 끊어버립니다)
+                if (!self.bufferReader.AdvanceWrite(receiveResult.Count))
                 {
                     await self.Disconnect(cancellationToken, WebSocketCloseStatus.InternalServerError);
                     break;
                 }
                 
-                // MessageSerializer.Read(null, self);
-                await self.socket.SendAsync(self.readBuffer.Slice(receiveResult.Count).ToArray(), WebSocketMessageType.Text,
-                    WebSocketMessageFlags.DisableCompression | WebSocketMessageFlags.EndOfMessage, cancellationToken);
+                self.bufferReader.ReadAndHandleMessage(self);
 
-                if (!self.readBuffer.AdvanceRead())
+                // 버퍼에서 데이터를 읽었으니 다음에 읽기 시작할 위치를 조정합니다 (이걸 실패하면 비정상이니 연결을 끊어버립니다)
+                if (!self.bufferReader.AdvanceRead())
                 {
                     await self.Disconnect(cancellationToken, WebSocketCloseStatus.InternalServerError);
                     break;
