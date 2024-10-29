@@ -74,7 +74,7 @@ public class WebSocketWrapper : IAsyncDisposable
                     break;
                 }
                 
-                self.bufferReader.ReadAndHandleMessage(self.handler);
+                await self.bufferReader.ReadAndHandleMessage(self.handler);
 
                 // 버퍼에서 데이터를 읽었으니 다음에 읽기 시작할 위치를 조정합니다 (이걸 실패하면 비정상이니 연결을 끊어버립니다)
                 if (!self.bufferReader.AdvanceRead())

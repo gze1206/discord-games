@@ -27,13 +27,12 @@ public class WebSocketClient : IMessageHandler, IDisposable
         this.wrapper.OnOpen += this.OnOpen;
 
         Task.Run(this.ProcessSend, this.cancellationTokenSource.Token);
-        Task.Run(() => Internal(this, new Uri(host)), this.cancellationTokenSource.Token);
-
-        static async PooledValueTask Internal(WebSocketClient self, Uri host)
+        Task.Run(async () =>
         {
-            await self.wrapper.Connect(host, self.cancellationTokenSource.Token);
-            await self.wrapper.Loop(self.cancellationTokenSource.Token);
-        }
+            await this.wrapper.Connect(new Uri(host), this.cancellationTokenSource.Token);
+            await this.wrapper.Loop(this.cancellationTokenSource.Token);
+            
+        }, this.cancellationTokenSource.Token);
     }
 
     private void OnOpen()

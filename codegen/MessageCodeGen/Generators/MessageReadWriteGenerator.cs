@@ -17,6 +17,7 @@ namespace MessageCodeGen.Generators
             if (writer == null) throw new ArgumentNullException(nameof(writer));
             
             writer.Write("using System;");
+            writer.Write("using System.Threading.Tasks;");
             writer.Write("using DiscordGames.Core.Memory;");
             writer.Write("using DiscordGames.Core.Net.Message;");
             writer.Write();
@@ -35,15 +36,15 @@ namespace MessageCodeGen.Generators
 
         private static void GenRead(IReadOnlyList<INamedTypeSymbol> messages, CodeWriter writer)
         {
-            writer.Write("public static void ReadAndHandleMessage(this ref BufferReader reader, IMessageHandler handler)");
+            writer.Write("public static ValueTask ReadAndHandleMessage(this ref BufferReader reader, IMessageHandler handler)");
             using (writer.BeginBlock())
             {
                 writer.Write("var readSpan = reader.ReadSegment;");
-                writer.Write("if (readSpan.Length < MessagePrefixSize) return;");
+                writer.Write("if (readSpan.Length < MessagePrefixSize) return default;");
                 writer.Write();
                 writer.Write("var expectedMessageSize = readSpan[0];");
                 writer.Write("var messageSize = readSpan.Length - MessagePrefixSize - MessagePostfixSize;");
-                writer.Write("if (messageSize < expectedMessageSize) return;");
+                writer.Write("if (messageSize < expectedMessageSize) return default;");
                 writer.Write();
                 writer.Write("var checksum = BitConverter.ToUInt32(readSpan.Slice(messageSize + MessagePrefixSize));");
                 writer.Write("var actualChecksum = CalcChecksum(readSpan.Slice(MessagePrefixSize, messageSize));");
@@ -54,6 +55,7 @@ namespace MessageCodeGen.Generators
                 writer.Write();
                 writer.Write("// Read message header and payload");
                 writer.Write("var header = reader.ReadHeader();");
+                writer.Write("ValueTask handlerTask;");
                 writer.Write("switch (header.MessageType)");
                 using (writer.BeginBlock())
                 {
@@ -63,7 +65,7 @@ namespace MessageCodeGen.Generators
                         writer.Write($"case MessageType.{name}:");
                         using (writer.BeginBlock())
                         {
-                            writer.Write($"handler.On{name}(reader.Read{typeName}(ref header)).GetAwaiter().GetResult();");
+                            writer.Write($"handlerTask = handler.On{name}(reader.Read{typeName}(ref header));");
                             writer.Write("break;");
                         }
                     }
@@ -72,6 +74,8 @@ namespace MessageCodeGen.Generators
                 writer.Write();
                 writer.Write("// Marking as read message postfix");
                 writer.Write("reader.AdvanceReadOffset(MessagePostfixSize);");
+                writer.Write();
+                writer.Write("return handlerTask;");
             }
         }
 

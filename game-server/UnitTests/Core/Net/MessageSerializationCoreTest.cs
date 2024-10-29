@@ -68,7 +68,7 @@ public class MessageSerializationCoreTest
         var reader = new BufferReader(binary);
         reader.AdvanceWrite(binary.Length);
 
-        reader.ReadAndHandleMessage(handler);
+        await reader.ReadAndHandleMessage(handler);
 
         var isSucceed = await handler.Wait();
         
@@ -97,7 +97,7 @@ public class MessageSerializationCoreTest
             var reader = new BufferReader(binary);
             reader.AdvanceWrite(binary.Length);
 
-            reader.ReadAndHandleMessage(handler);
+            await reader.ReadAndHandleMessage(handler);
         }
         catch (MessageChecksumException)
         {
@@ -127,7 +127,7 @@ public class MessageSerializationCoreTest
             var reader = new BufferReader(binary);
             reader.AdvanceWrite(binary.Length);
 
-            reader.ReadAndHandleMessage(handler);
+            await reader.ReadAndHandleMessage(handler);
         }
         catch (MessageSchemeVersionException)
         {
