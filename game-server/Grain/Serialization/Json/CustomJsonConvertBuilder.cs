@@ -1,10 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.DependencyInjection;
-using Orleans.Serialization;
-using Orleans.Storage;
 
-namespace DiscordGames.Server.Serialization.Json;
+namespace DiscordGames.Grain.Serialization.Json;
 
 public class CustomJsonConvertBuilder
 {
@@ -37,24 +34,5 @@ public class CustomJsonConvertBuilder
         }
 
         return options;
-    }
-}
-
-public static class CustomJsonConverterExtension
-{
-    public static ISiloBuilder AddCustomJsonSerializer(this ISiloBuilder siloBuilder, CustomJsonConvertBuilder builder)
-    {
-        var jsonSerializerOptions = builder.BakeOptions();
-        
-        siloBuilder.Services
-            .AddSerializer(serializerBuilder => serializerBuilder
-                .AddJsonSerializer(
-                    isSupported: builder.IsSupport,
-                    jsonSerializerOptions: jsonSerializerOptions));
-
-        siloBuilder.AddMemoryGrainStorageAsDefault(options =>
-            options.GrainStorageSerializer = new CustomJsonGrainStorageSerializer(jsonSerializerOptions));
-
-        return siloBuilder;
     }
 }

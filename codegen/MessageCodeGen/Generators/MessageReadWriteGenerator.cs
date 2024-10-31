@@ -48,7 +48,7 @@ namespace MessageCodeGen.Generators
                 writer.Write();
                 writer.Write("var checksum = BitConverter.ToUInt32(readSpan.Slice(messageSize + MessagePrefixSize));");
                 writer.Write("var actualChecksum = CalcChecksum(readSpan.Slice(MessagePrefixSize, messageSize));");
-                writer.Write("if (checksum != actualChecksum) ThrowHelper.ThrowChecksum();");
+                writer.Write("if (checksum != actualChecksum) CoreThrowHelper.ThrowChecksum();");
                 writer.Write();
                 writer.Write("// Mark as read message prefix");
                 writer.Write("reader.AdvanceReadOffset(MessagePrefixSize);");

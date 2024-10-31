@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Orleans.Storage;
 
-namespace DiscordGames.Server.Serialization.Json;
+namespace DiscordGames.Grain.Serialization.Json;
 
 public class CustomJsonGrainStorageSerializer : IGrainStorageSerializer
 {

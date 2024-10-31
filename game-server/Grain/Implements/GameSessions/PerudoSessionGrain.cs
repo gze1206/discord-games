@@ -35,7 +35,7 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
         if (this.currentTurnInfo == null && 0 <= this.State.CurrentTurn)
         {
             if (this.State.TurnOrder.Count <= this.State.CurrentTurn)
-                ThrowHelper.ThrowInvalidTurnOrderState();
+                GrainThrowHelper.ThrowInvalidTurnOrderState();
             
             this.totalDices = 0;
             this.currentTurnInfo = this.State.TurnOrder[this.State.CurrentTurn];
@@ -183,7 +183,7 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
         if (quantity < 1 || this.totalDices < quantity) return ValueTask.FromResult(PlaceBidResult.InvalidQuantity);
         if (face is < 1 or > 6) return ValueTask.FromResult(PlaceBidResult.InvalidFace);
 
-        if (!this.currentTurnInfo.IsAlive) ThrowHelper.ThrowInvalidTurnPlaying();
+        if (!this.currentTurnInfo.IsAlive) GrainThrowHelper.ThrowInvalidTurnPlaying();
         
         var lastQuantity = this.State.LastBidQuantity;
         var lastFace = this.State.LastBidFace;
@@ -230,7 +230,7 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
             if (lastBidder < 0 || self.lastBidderInfo == null) return ChallengeResult.NoPreviousBid;
             if (self.currentTurnInfo?.UserId != userId) return ChallengeResult.NotFromCurrentTurnUser;
 
-            if (!self.currentTurnInfo.IsAlive) ThrowHelper.ThrowInvalidTurnPlaying();
+            if (!self.currentTurnInfo.IsAlive) GrainThrowHelper.ThrowInvalidTurnPlaying();
 
             var lastBidQuantity = self.State.LastBidQuantity;
             var face = self.State.LastBidFace;
@@ -295,10 +295,15 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
         return ValueTask.CompletedTask;
     }
     
+    [GenerateSerializer]
+    [Alias("DiscordGames.Grain.Implements.GameSessions.PerudoSessionGrain.PlayerInfo")]
     public class PlayerInfo
     {
+        [Id(0)]
         public UserId UserId { get; }
+        [Id(1)]
         public LinkedList<int> Dices { get; }
+        [Id(2)]
         public int Life { get; set; }
 
         public bool IsAlive => 0 < this.Life;

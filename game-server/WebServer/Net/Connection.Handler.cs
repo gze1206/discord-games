@@ -2,6 +2,8 @@ using System.Net.WebSockets;
 using DiscordGames.Core.Net;
 using DiscordGames.Core.Net.Message;
 using DiscordGames.Core.Net.Serialize;
+using DiscordGames.Grain.Interfaces.GameSessions;
+using DiscordGames.Grain.ResultCodes.PerudoSession;
 using PooledAwait;
 
 namespace WebServer.Net;
@@ -33,8 +35,31 @@ public partial class Connection : IMessageHandler
 
     public ValueTask OnHostGame(HostGameMessage message)
     {
-        this.logger.LogInformation("HOST [{name}]", message.Name);
-        
-        return ValueTask.CompletedTask;
+        return Internal(this, message);
+        static async PooledValueTask Internal(Connection self, HostGameMessage message)
+        {
+            using var _ = self.logger.BeginScope("HOST GAME");
+            switch (message.Data)
+            {
+                case PerudoHostGameData perudo:
+                {
+                    var session = self.cluster.GetGrain<IPerudoSessionGrain>(Guid.NewGuid());
+                    var result = await session.InitSession(
+                        -1,
+                        message.Name,
+                        perudo.MaxPlayers,
+                        perudo.IsClassicRule
+                    );
+                    
+                    if (result != InitPerudoSessionResult.Ok) self.logger.LogWarning("RESULT NOT OK [{result}]", result);
+                    self.logger.LogInformation("SESSION ID : {id}", session.GetPrimaryKey());
+                    break;
+                }
+                default:
+                    CoreThrowHelper.ThrowInvalidOperation();
+                    break;
+            }
+            self.logger.LogInformation("HOST [{name}]", message.Name);
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using DiscordGames.Server.Serialization.Json;
+﻿using DiscordGames.Grain.Serialization;
+using DiscordGames.Server.Serialization.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -6,8 +7,7 @@ using Microsoft.Extensions.Logging;
 var builder = Host.CreateDefaultBuilder(args)
     .UseOrleans(silo =>
     {
-        var jsonConvert = new CustomJsonConvertBuilder()
-            .Add<LinkedListJsonConverter<int>>();
+        var jsonConvert = SerializeDefines.JsonConvertBuilder;
         
         silo.UseLocalhostClustering();
 

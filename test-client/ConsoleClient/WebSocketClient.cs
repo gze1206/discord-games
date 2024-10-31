@@ -121,7 +121,7 @@ public class WebSocketClient : IMessageHandler, IDisposable
 
     public ValueTask OnHostGame(HostGameMessage message)
     {
-        ThrowHelper.ThrowInvalidOperation();
+        CoreThrowHelper.ThrowInvalidOperation();
         return ValueTask.CompletedTask;
     }
 }

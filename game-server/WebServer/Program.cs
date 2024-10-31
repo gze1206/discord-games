@@ -1,4 +1,6 @@
 using DiscordGames.Core.Memory.Pool;
+using DiscordGames.Grain.Serialization;
+using Orleans.Serialization;
 using WebServer.Net;
 
 MemoryPool.Init(new PinnedObjectHeapPool());
@@ -14,6 +16,18 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddLogging(logging =>
 {
     logging.AddSimpleConsole(options => options.IncludeScopes = true);
+});
+
+builder.Host.UseOrleansClient(client =>
+{
+    var jsonConvert = SerializeDefines.JsonConvertBuilder;
+
+    client.Services
+        .AddSerializer(serializer => serializer.AddJsonSerializer(
+            isSupported: jsonConvert.IsSupport,
+            jsonSerializerOptions: jsonConvert.BakeOptions()));
+    
+    client.UseLocalhostClustering();
 });
 
 var app = builder.Build();
@@ -37,7 +51,8 @@ app.Use(async (context, next) =>
             using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
             var conn = new Connection(webSocket,
                 context.Connection.RemoteIpAddress?.ToString() ?? "(Unknown)",
-                context.RequestServices.GetRequiredService<ILogger<Connection>>());
+                context.RequestServices.GetRequiredService<ILogger<Connection>>(),
+                context.RequestServices.GetRequiredService<IClusterClient>());
             
             await conn.Loop(CancellationToken.None);
         }

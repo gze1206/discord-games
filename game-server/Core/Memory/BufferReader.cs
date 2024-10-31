@@ -47,7 +47,7 @@ public struct BufferReader
     public void AdvanceReadOffset(int length)
     {
         var readFrom = this.readSegmentFrom + this.readOffset;
-        if (this.writeSegmentFrom < readFrom + length) ThrowHelper.ThrowReadBufferOutOfRange();
+        if (this.writeSegmentFrom < readFrom + length) CoreThrowHelper.ThrowReadBufferOutOfRange();
         
         this.readOffset += length;
     }
@@ -72,7 +72,7 @@ public struct BufferReader
     public ReadOnlySpan<byte> Slice(int length)
     {
         var readFrom = this.readSegmentFrom + this.readOffset;
-        if (this.writeSegmentFrom < readFrom + length) ThrowHelper.ThrowReadBufferOutOfRange();
+        if (this.writeSegmentFrom < readFrom + length) CoreThrowHelper.ThrowReadBufferOutOfRange();
         
         var span = this.buffer.AsSpan(readFrom, length);
         this.readOffset += length;

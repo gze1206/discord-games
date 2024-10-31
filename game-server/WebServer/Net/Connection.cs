@@ -14,14 +14,16 @@ public partial class Connection
     private readonly WebSocket socket;
     private readonly string address;
     private readonly ILogger<Connection> logger;
+    private readonly IClusterClient cluster;
 
     private BufferReader bufferReader;
 
-    public Connection(WebSocket socket, string address, ILogger<Connection> logger)
+    public Connection(WebSocket socket, string address, ILogger<Connection> logger, IClusterClient cluster)
     {
         this.socket = socket;
         this.address = address;
         this.logger = logger;
+        this.cluster = cluster;
         this.bufferReader = new BufferReader(GC.AllocateArray<byte>(ReadBufferSize, pinned: true));
     }
 

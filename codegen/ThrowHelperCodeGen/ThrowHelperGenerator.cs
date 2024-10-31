@@ -37,8 +37,10 @@ namespace ThrowHelperCodeGen
                 writer.Write($"using {value};");
             }
             writer.Write();
+
+            var classNamePart = doc.Attribute("Name")?.Value ?? string.Empty;
             
-            writer.Write("public static partial class ThrowHelper");
+            writer.Write($"public static class {classNamePart}ThrowHelper");
             using (writer.BeginBlock())
             {
                 foreach (var node in doc.Descendants(ExceptionRootName).SelectMany(x => x.Descendants(ExceptionNodeName)))
@@ -52,7 +54,7 @@ namespace ThrowHelperCodeGen
                     writer.Write();
                 }
             }
-
+            
             context.AddSource("ThrowHelper.g.cs", writer.ToSourceText());
         }
     }
