@@ -26,7 +26,12 @@ public class CustomJsonConvertBuilder
     // ReSharper disable once MemberCanBePrivate.Global
     public JsonSerializerOptions BakeOptions()
     {
-        var options = new JsonSerializerOptions { WriteIndented = true };
+        var options = new JsonSerializerOptions
+        {
+#if DEBUG
+            WriteIndented = true
+#endif
+        };
 
         foreach (var converter in this.converters)
         {
