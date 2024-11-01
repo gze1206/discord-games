@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using DiscordGames.Core.Memory.Pool;
 
 #pragma warning disable CS8500
@@ -13,6 +12,7 @@ public unsafe struct BufferSegment
 #else
     private byte[]? memory;
 #endif
+    private bool isDisposed;
 
     public BufferSegment* Next { get; set; }
     public int Used { get; private set; }
@@ -29,6 +29,8 @@ public unsafe struct BufferSegment
 
     public void Dispose()
     {
+        if (this.isDisposed) return;
+        
 #if USE_BUFFER_MEMORY
         this.memory?.Release();
 #endif
@@ -36,6 +38,7 @@ public unsafe struct BufferSegment
         this.memory = null;
         this.Next = null;
         this.Used = 0;
+        this.isDisposed = true;
     }
 
     public Span<byte> RequestSpan(int length)

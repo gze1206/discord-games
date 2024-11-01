@@ -9,6 +9,7 @@ namespace DiscordGames.Core.Memory;
 
 public unsafe struct BufferWriter
 {
+    private bool isDisposed;
     private BufferSegment* head;
     private BufferSegment* tail;
     
@@ -19,11 +20,18 @@ public unsafe struct BufferWriter
         this.head = null;
         this.tail = null;
         this.UsedTotal = 0;
+        this.isDisposed = false;
     }
 
     public void Dispose()
     {
-        if (this.head == null) return;
+        if (this.isDisposed) return;
+        
+        if (this.head == null)
+        {
+            this.isDisposed = true;
+            return;
+        }
 
         var node = this.head;
         while (node != null)
@@ -41,6 +49,7 @@ public unsafe struct BufferWriter
         this.head = null;
         this.tail = null;
         this.UsedTotal = 0;
+        this.isDisposed = true;
     }
 
     public Span<byte> RequestSpan(int length)

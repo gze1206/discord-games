@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using DiscordGames.Core.Memory;
@@ -7,7 +8,7 @@ using WebServer.LogMessages.Net;
 
 namespace WebServer.Net;
 
-public partial class Connection
+public partial class Connection : IDisposable
 {
     private const int ReadBufferSize = 1024;
     
@@ -16,6 +17,8 @@ public partial class Connection
     private readonly ILogger<Connection> logger;
     private readonly IClusterClient cluster;
 
+    private bool isDisposed;
+    private byte[]? buffer;
     private BufferReader bufferReader;
 
     public Connection(WebSocket socket, string address, ILogger<Connection> logger, IClusterClient cluster)
@@ -24,7 +27,22 @@ public partial class Connection
         this.address = address;
         this.logger = logger;
         this.cluster = cluster;
-        this.bufferReader = new BufferReader(GC.AllocateArray<byte>(ReadBufferSize, pinned: true));
+        this.buffer = ArrayPool<byte>.Shared.Rent(ReadBufferSize);
+        this.bufferReader = new BufferReader(this.buffer);
+    }
+
+    public void Dispose()
+    {
+        if (this.isDisposed) return;
+
+        if (this.buffer != null)
+        {
+            ArrayPool<byte>.Shared.Return(this.buffer);
+            this.buffer = null;
+        }
+        this.isDisposed = true;
+        
+        GC.SuppressFinalize(this);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

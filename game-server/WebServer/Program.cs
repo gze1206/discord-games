@@ -49,7 +49,7 @@ app.Use(async (context, next) =>
         if (context.WebSockets.IsWebSocketRequest)
         {
             using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-            var conn = new Connection(webSocket,
+            using var conn = new Connection(webSocket,
                 context.Connection.RemoteIpAddress?.ToString() ?? "(Unknown)",
                 context.RequestServices.GetRequiredService<ILogger<Connection>>(),
                 context.RequestServices.GetRequiredService<IClusterClient>());

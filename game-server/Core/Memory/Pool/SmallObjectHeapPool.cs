@@ -6,6 +6,7 @@ namespace DiscordGames.Core.Memory.Pool;
 
 public class SmallObjectHeapPool : IMemoryPool
 {
+    private bool isDisposed;
 #if USE_BUFFER_MEMORY
     private readonly ConcurrentQueue<BufferMemory> pool = new();
 
@@ -39,7 +40,10 @@ public class SmallObjectHeapPool : IMemoryPool
 
     public void Dispose()
     {
+        if (this.isDisposed) return;
+        
         this.pool.Clear();
+        this.isDisposed = true;
         GC.SuppressFinalize(this);
     }
 }

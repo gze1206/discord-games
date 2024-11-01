@@ -5,27 +5,38 @@ MemoryPool.Init(new PinnedObjectHeapPool());
 
 var socket = new WebSocketClient("ws://localhost:9000/ws");
 
-while (Console.ReadLine() is { } cmd)
+try
 {
-    if (cmd == "q") break;
-
-    var tokens = cmd.ToLower().Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-    switch (tokens[0])
+    while (Console.ReadLine() is { } cmd)
     {
-        case "host":
-            if (tokens.Length != 2) continue;
-            switch (tokens[1])
-            {
-                case "perudo":
-                    socket.HostPerudo(4, false);
-                    continue;
-            }
-            goto default;
-        default:
-            Console.WriteLine("Unknown command");
-            break;
+        if (cmd == "q") break;
+
+        var tokens = cmd.ToLower().Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        switch (tokens[0])
+        {
+            case "host":
+                if (tokens.Length != 2) continue;
+                switch (tokens[1])
+                {
+                    case "perudo":
+                        socket.HostPerudo(4, false);
+                        continue;
+                }
+
+                goto default;
+            default:
+                Console.WriteLine("Unknown command");
+                break;
+        }
     }
 }
-
-await socket.Disconnect();
-socket.Dispose();
+catch (Exception e)
+{
+    Console.WriteLine(e.ToString());
+}
+finally
+{
+    await socket.Disconnect();
+    await socket.DisposeAsync();
+    
+}

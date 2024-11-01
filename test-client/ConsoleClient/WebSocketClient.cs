@@ -8,12 +8,13 @@ using TestClient.Net;
 
 namespace ConsoleClient;
 
-public class WebSocketClient : IMessageHandler, IDisposable
+public class WebSocketClient : IMessageHandler, IAsyncDisposable
 {
     private readonly WebSocketWrapper wrapper;
     private readonly CancellationTokenSource cancellationTokenSource;
     private readonly ConcurrentQueue<byte[]> sendQueue;
 
+    private bool isDisposed;
     private long lastServerPingTicks = -1;
     private bool hasLoggedIn = false;
     private UserId userId;
@@ -74,15 +75,16 @@ public class WebSocketClient : IMessageHandler, IDisposable
         }
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        var disconnectTask = this.Disconnect();
-        if (!disconnectTask.IsCompleted) disconnectTask.AsTask().GetAwaiter().GetResult();
-
-        var disposeTask = this.wrapper.DisposeAsync();
-        if (!disposeTask.IsCompleted) disposeTask.AsTask().GetAwaiter().GetResult();
-
+        if (this.isDisposed) return;
+        
         GC.SuppressFinalize(this);
+        
+        await this.Disconnect();
+        await this.wrapper.DisposeAsync();
+        
+        this.isDisposed = true;
     }
 
     public void HostPerudo(int maxPlayers, bool isClassicRule)

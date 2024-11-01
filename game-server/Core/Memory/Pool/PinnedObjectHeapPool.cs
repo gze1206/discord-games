@@ -6,6 +6,7 @@ namespace DiscordGames.Core.Memory.Pool;
 
 public class PinnedObjectHeapPool : IMemoryPool
 {
+    private bool isDisposed;
 #if USE_BUFFER_MEMORY
     private readonly ConcurrentQueue<BufferMemory> pool = new();
 
@@ -43,7 +44,10 @@ public class PinnedObjectHeapPool : IMemoryPool
 
     public void Dispose()
     {
+        if (this.isDisposed) return;
+        
         this.pool.Clear();
+        this.isDisposed = true;
         GC.SuppressFinalize(this);
     }
 }

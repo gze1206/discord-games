@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using DiscordGames.Core.Memory;
@@ -16,14 +17,35 @@ public class WebSocketWrapper : IAsyncDisposable
     
     private readonly ClientWebSocket socket;
     private readonly IMessageHandler handler;
-    
+
+    private bool isDisposed;
+    private byte[]? buffer;
     private BufferReader bufferReader;
 
     public WebSocketWrapper(IMessageHandler handler)
     {
         this.socket = new ClientWebSocket();
         this.handler = handler;
-        this.bufferReader = new BufferReader(GC.AllocateArray<byte>(ReadBufferSize, pinned: true));
+        this.buffer = ArrayPool<byte>.Shared.Rent(ReadBufferSize);
+        this.bufferReader = new BufferReader(this.buffer);
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        if (this.isDisposed) return;
+        
+        GC.SuppressFinalize(this);
+        
+        if (this.buffer != null)
+        {
+            ArrayPool<byte>.Shared.Return(this.buffer);
+            this.buffer = null;
+        }
+        
+        await this.Disconnect(CancellationToken.None);
+        this.socket.Dispose();
+
+        this.isDisposed = true;
     }
 
     public ValueTask Connect(Uri host, CancellationToken cancellationToken)
@@ -83,17 +105,6 @@ public class WebSocketWrapper : IAsyncDisposable
                     break;
                 }
             }
-        }
-    }
-
-    public ValueTask DisposeAsync()
-    {
-        GC.SuppressFinalize(this);
-        return Internal(this);
-        static async PooledValueTask Internal(WebSocketWrapper self)
-        {
-            await self.Disconnect(CancellationToken.None);
-            self.socket.Dispose();
         }
     }
 
