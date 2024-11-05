@@ -12,18 +12,19 @@ public class WebSocketClient : IMessageHandler, IAsyncDisposable
 {
     private readonly WebSocketWrapper wrapper;
     private readonly CancellationTokenSource cancellationTokenSource;
-    private readonly ConcurrentQueue<byte[]> sendQueue;
+    private readonly Queue<byte[]> sendQueue;
 
     private bool isDisposed;
     private long lastServerPingTicks = -1;
     private bool hasLoggedIn = false;
     private UserId userId;
+    private SpinLock sendQueueLock;
 
     public WebSocketClient(string host)
     {
         this.wrapper = new WebSocketWrapper(this);
         this.cancellationTokenSource = new CancellationTokenSource();
-        this.sendQueue = new ConcurrentQueue<byte[]>();
+        this.sendQueue = new Queue<byte[]>();
         
         this.wrapper.OnOpen += this.OnOpen;
 
@@ -39,28 +40,59 @@ public class WebSocketClient : IMessageHandler, IAsyncDisposable
     private void OnOpen()
     {
         Console.WriteLine("Connected!");
-        this.sendQueue.Enqueue(MessageSerializer.WriteGreetingMessage(MessageChannel.Direct, -1, Constants.BotAccessToken));
+
+        var lockTaken = false;
+        try
+        {
+            this.sendQueueLock.TryEnter(ref lockTaken);
+            this.sendQueue.Enqueue(MessageSerializer.WriteGreetingMessage(MessageChannel.Direct, -1, Constants.BotAccessToken));
+        }
+        finally
+        {
+            if (lockTaken) this.sendQueueLock.Exit();
+        }
     }
 
-    private void SendPing() => this.sendQueue.Enqueue(MessageSerializer.WritePingMessage(MessageChannel.Direct, DateTime.UtcNow.Ticks));
+    private void SendPing()
+    {
+        var lockTaken = false;
+        try
+        {
+            this.sendQueueLock.TryEnter(ref lockTaken);
+            this.sendQueue.Enqueue(MessageSerializer.WritePingMessage(MessageChannel.Direct, DateTime.UtcNow.Ticks));
+        }
+        finally
+        {
+            if (lockTaken) this.sendQueueLock.Exit();
+        }
+    }
 
     private ValueTask ProcessSend()
     {
         return Internal(this, this.cancellationTokenSource.Token);
         static async PooledValueTask Internal(WebSocketClient self, CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested || !self.sendQueue.IsEmpty)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                var buffers = new List<byte[]>();
-                while (self.sendQueue.TryDequeue(out var buffer))
+                var lockTaken = false;
+                byte[][]? buffers;
+                try
                 {
-                    buffers.Add(buffer);
+                    self.sendQueueLock.TryEnter(ref lockTaken);
+                    buffers = self.sendQueue.ToArray();
+                    self.sendQueue.Clear();
+                }
+                finally
+                {
+                    if (lockTaken) self.sendQueueLock.Exit();
                 }
 
                 foreach (var buffer in buffers)
                 {
                     await self.wrapper.SendAsync(buffer);
                 }
+
+                await Task.Delay(1000, cancellationToken);
             }
         }
     }
@@ -88,12 +120,23 @@ public class WebSocketClient : IMessageHandler, IAsyncDisposable
     }
 
     public void HostPerudo(int maxPlayers, bool isClassicRule)
-        => this.sendQueue.Enqueue(MessageSerializer.WriteHostGameMessage(
-            MessageChannel.Direct,
-            Guid.NewGuid().ToString(),
-            new PerudoHostGameData(maxPlayers, isClassicRule)
-        ));
-    
+    {
+        var lockTaken = false;
+        try
+        {
+            this.sendQueueLock.TryEnter(ref lockTaken);
+            this.sendQueue.Enqueue(MessageSerializer.WriteHostGameMessage(
+                MessageChannel.Direct,
+                Guid.NewGuid().ToString(),
+                new PerudoHostGameData(maxPlayers, isClassicRule)
+            ));
+        }
+        finally
+        {
+            if (lockTaken) this.sendQueueLock.Exit();
+        }
+    }
+
     public ValueTask OnGreeting(GreetingMessage message)
     {
         if (this.hasLoggedIn)

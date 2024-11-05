@@ -42,7 +42,6 @@ public class WebSocketWrapper : IAsyncDisposable
             this.buffer = null;
         }
         
-        await this.Disconnect(CancellationToken.None);
         this.socket.Dispose();
 
         this.isDisposed = true;
@@ -69,23 +68,29 @@ public class WebSocketWrapper : IAsyncDisposable
         return Internal(this, cancellationToken);
         static async PooledValueTask Internal(WebSocketWrapper self, CancellationToken cancellationToken)
         {
-            while (self.socket.State == WebSocketState.Open && !cancellationToken.IsCancellationRequested)
+            while (self.socket.State is WebSocketState.Open)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    await self.Disconnect(CancellationToken.None);
+                    break;
+                }
+                
                 // 먼저 '읽기 영역'을 버퍼의 가장 앞쪽으로 당겨옵니다 ('쓰기 영역' 공간 확보를 위해)
                 self.bufferReader.Compact();
                 
                 var receiveResult = await self.socket.ReceiveAsync(self.bufferReader.WriteSegment, CancellationToken.None);
                 
                 // 텍스트 데이터는 받지 않고, 바이트로 직렬화된 것만 받습니다
-                if (receiveResult.MessageType == WebSocketMessageType.Text) continue;
+                if (receiveResult.MessageType is WebSocketMessageType.Text) continue;
 
                 // 접속 종료 메시지라면 접속 해제 처리를 합니다
-                if (receiveResult.MessageType == WebSocketMessageType.Close)
+                if (receiveResult.MessageType is WebSocketMessageType.Close)
                 {
                     await self.Disconnect(cancellationToken);
                     break;
                 }
-                
+
                 // 데이터 크기가 0 이하라면 바로 다음 데이터를 받기 위해 돌아갑니다
                 if (receiveResult.Count <= 0) continue;
 
@@ -95,7 +100,7 @@ public class WebSocketWrapper : IAsyncDisposable
                     await self.Disconnect(cancellationToken, WebSocketCloseStatus.InternalServerError);
                     break;
                 }
-                
+
                 await self.bufferReader.ReadAndHandleMessage(self.handler);
 
                 // 버퍼에서 데이터를 읽었으니 다음에 읽기 시작할 위치를 조정합니다 (이걸 실패하면 비정상이니 연결을 끊어버립니다)
