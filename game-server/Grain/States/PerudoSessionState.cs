@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
-using DiscordGames.Grain.Implements.GameSessions;
+using DiscordGames.Grains.Implements.GameSessions;
 
-namespace DiscordGames.Grain.States;
+namespace DiscordGames.Grains.States;
 
 using static PerudoSessionGrain;
 

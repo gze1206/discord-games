@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace DiscordGames.Grain.Serialization.Json;
+namespace DiscordGames.Grains.Serialization.Json;
 
 public class LinkedListJsonConverter<T> : CustomJsonConverter<LinkedList<T>>
 {

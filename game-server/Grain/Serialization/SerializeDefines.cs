@@ -1,6 +1,6 @@
-using DiscordGames.Grain.Serialization.Json;
+using DiscordGames.Grains.Serialization.Json;
 
-namespace DiscordGames.Grain.Serialization;
+namespace DiscordGames.Grains.Serialization;
 
 public static class SerializeDefines
 {

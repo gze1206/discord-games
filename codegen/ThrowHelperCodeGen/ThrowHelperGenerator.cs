@@ -28,7 +28,6 @@ namespace ThrowHelperCodeGen
             var doc = XDocument.Parse(xml).Root;
             var writer = new CodeWriter();
 
-            writer.Write("using System.Runtime.CompilerServices;");
             foreach (var node in doc.Descendants(UsingRootName).SelectMany(x => x.Descendants(UsingNodeName)))
             {
                 var value = node.Value;
@@ -50,7 +49,8 @@ namespace ThrowHelperCodeGen
                     var message = node.Attribute("Message")?.Value ?? string.Empty;
                     
                     writer.Write($"private static readonly Lazy<{type}> {name}Instance = new Lazy<{type}>(() => new {type}(\"{message}\"));");
-                    writer.Write($"[MethodImpl(MethodImplOptions.AggressiveInlining)] public static void Throw{name}() => throw {name}Instance.Value;");
+                    writer.Write($"public static void Throw{name}() => throw {name}Instance.Value;");
+                    writer.Write($"public static {type} {name} => {name}Instance.Value;");
                     writer.Write();
                 }
             }

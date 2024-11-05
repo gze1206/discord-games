@@ -1,5 +1,5 @@
-using DiscordGames.Grain.Serialization;
-using DiscordGames.Grain.Serialization.Json;
+using DiscordGames.Grains.Serialization;
+using DiscordGames.Grains.Serialization.Json;
 
 // ReSharper disable once CheckNamespace
 namespace UnitTests.Utils;

@@ -39,7 +39,7 @@ public class WebSocketClient : IMessageHandler, IAsyncDisposable
     private void OnOpen()
     {
         Console.WriteLine("Connected!");
-        this.sendQueue.Enqueue(MessageSerializer.WriteGreetingMessage(MessageChannel.Direct, -1, Constants.MockDiscordUid));
+        this.sendQueue.Enqueue(MessageSerializer.WriteGreetingMessage(MessageChannel.Direct, -1, Constants.BotAccessToken));
     }
 
     private void SendPing() => this.sendQueue.Enqueue(MessageSerializer.WritePingMessage(MessageChannel.Direct, DateTime.UtcNow.Ticks));

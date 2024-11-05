@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace DiscordGames.Grain.Serialization.Json;
+namespace DiscordGames.Grains.Serialization.Json;
 
 public interface ICustomJsonConverter
 {

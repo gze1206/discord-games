@@ -1,5 +1,5 @@
 using DiscordGames.Core.Memory.Pool;
-using DiscordGames.Grain.Serialization;
+using DiscordGames.Grains.Serialization;
 using Orleans.Serialization;
 using WebServer.Net;
 

@@ -1,7 +1,7 @@
-﻿using DiscordGames.Grain.ResultCodes.CommonSession;
+﻿using DiscordGames.Grains.ResultCodes.CommonSession;
 using Microsoft.Extensions.Logging;
 
-namespace DiscordGames.Grain.Interfaces.GameSessions;
+namespace DiscordGames.Grains.Interfaces.GameSessions;
 
 [Alias("Server.Grains.IGameSessionGrain")]
 public interface IGameSessionGrain : IGrainWithGuidKey

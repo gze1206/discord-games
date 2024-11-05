@@ -1,4 +1,4 @@
-using DiscordGames.Grain.Serialization.Json;
+using DiscordGames.Grains.Serialization.Json;
 using Orleans.Serialization;
 
 namespace DiscordGames.Server.Serialization.Json;

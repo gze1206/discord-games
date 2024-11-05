@@ -1,7 +1,7 @@
-﻿using DiscordGames.Grain.ResultCodes.PerudoSession;
-using DiscordGames.Grain.States;
+﻿using DiscordGames.Grains.ResultCodes.PerudoSession;
+using DiscordGames.Grains.States;
 
-namespace DiscordGames.Grain.Interfaces.GameSessions;
+namespace DiscordGames.Grains.Interfaces.GameSessions;
 
 [Alias("Server.Grains.GameSessions.IPerudoSessionGrain")]
 public interface IPerudoSessionGrain : IGameSessionGrain

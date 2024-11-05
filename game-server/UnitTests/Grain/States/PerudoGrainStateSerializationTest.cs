@@ -1,6 +1,6 @@
-using DiscordGames.Grain.Implements.GameSessions;
-using DiscordGames.Grain.Serialization.Json;
-using DiscordGames.Grain.States;
+using DiscordGames.Grains.Implements.GameSessions;
+using DiscordGames.Grains.Serialization.Json;
+using DiscordGames.Grains.States;
 using DiscordGames.Server.Serialization.Json;
 using UnitTests.Utils;
 

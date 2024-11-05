@@ -4,6 +4,14 @@
         <Using>System</Using>
     </Usings>
     <Exceptions>
+        <!-- Common -->
+        <Exception Name="InvalidSingletonGrainKey" Type="InvalidOperationException" Message="Singleton Grain은 정해진 키를 사용해야 합니다" />
+
+        <!-- Auth -->
+        <Exception Name="BotUserPoolExhausted" Type="InvalidOperationException" Message="Bot 유저 풀이 고갈되었습니다." />
+        <Exception Name="InvalidBotUser" Type="InvalidOperationException" Message="올바른 Bot 유저가 아닙니다." />
+
+        <!-- GameSession -->
         <Exception Name="InvalidTurnOrderState" Type="InvalidOperationException" Message="State의 현재 턴 정보와 턴 순서 정보가 불일치함" />
         <Exception Name="InvalidTurnPlaying" Type="InvalidOperationException" Message="탈락자의 턴이 진행 중입니다" />
     </Exceptions>

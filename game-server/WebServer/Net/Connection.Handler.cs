@@ -2,9 +2,12 @@ using System.Net.WebSockets;
 using DiscordGames.Core.Net;
 using DiscordGames.Core.Net.Message;
 using DiscordGames.Core.Net.Serialize;
-using DiscordGames.Grain.Interfaces.GameSessions;
-using DiscordGames.Grain.ResultCodes.PerudoSession;
+using DiscordGames.Grains.Interfaces;
+using DiscordGames.Grains.Interfaces.GameSessions;
+using DiscordGames.Grains.ResultCodes.PerudoSession;
 using PooledAwait;
+
+using static DiscordGames.Grains.Constants;
 
 namespace WebServer.Net;
 
@@ -15,10 +18,13 @@ public partial class Connection : IMessageHandler
         return Internal(this, message);
         static async PooledValueTask Internal(Connection self, GreetingMessage message)
         {
-            self.logger.LogInformation("GREETING [{discordUid}]", message.DiscordUid);
+            var auth = self.cluster.GetGrain<IAuthGrain>(SingletonGrainId);
+            var userId = await auth.VerifyTokenAndGetUserId(message.DiscordAccessToken);
+            
+            self.logger.LogInformation("GREETING [{userId}, {discordUid}]", userId, message.DiscordAccessToken);
             
             await self.socket.SendAsync(
-                MessageSerializer.WriteGreetingMessage(MessageChannel.Direct, -1, message.DiscordUid),
+                MessageSerializer.WriteGreetingMessage(MessageChannel.Direct, userId, message.DiscordAccessToken),
                 WebSocketMessageType.Binary,
                 WebSocketMessageFlags.EndOfMessage,
                 CancellationToken.None

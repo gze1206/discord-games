@@ -1,13 +1,13 @@
 ﻿using System.Text.Json.Serialization;
 using Cathei.LinqGen;
-using DiscordGames.Grain.ResultCodes.CommonSession;
-using DiscordGames.Grain.ResultCodes.PerudoSession;
-using DiscordGames.Grain.Interfaces.GameSessions;
-using DiscordGames.Grain.States;
+using DiscordGames.Grains.Interfaces.GameSessions;
+using DiscordGames.Grains.ResultCodes.CommonSession;
+using DiscordGames.Grains.ResultCodes.PerudoSession;
+using DiscordGames.Grains.States;
 using Microsoft.Extensions.Logging;
 using PooledAwait;
 
-namespace DiscordGames.Grain.Implements.GameSessions;
+namespace DiscordGames.Grains.Implements.GameSessions;
 
 public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
 {
