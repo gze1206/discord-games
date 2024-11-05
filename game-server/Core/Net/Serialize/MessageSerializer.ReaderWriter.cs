@@ -51,6 +51,17 @@ public static partial class MessageSerializer
         var span = writer.RequestSpan(sizeof(long));
         return BitConverter.TryWriteBytes(span, value);
     }
+    
+    public static ulong ReadUInt64(this ref BufferReader reader)
+    {
+        return BitConverter.ToUInt64(reader.Slice(sizeof(ulong)));
+    }
+
+    public static bool Write(this ref BufferWriter writer, ulong value)
+    {
+        var span = writer.RequestSpan(sizeof(ulong));
+        return BitConverter.TryWriteBytes(span, value);
+    }
 
     public static string? ReadString(this ref BufferReader reader)
     {
