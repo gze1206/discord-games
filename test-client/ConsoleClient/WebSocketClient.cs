@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+using System.Net.WebSockets;
 using DiscordGames.Core;
 using DiscordGames.Core.Net;
 using DiscordGames.Core.Net.Message;
@@ -28,10 +28,10 @@ public class WebSocketClient : IMessageHandler, IAsyncDisposable
         
         this.wrapper.OnOpen += this.OnOpen;
 
-        Task.Run(this.ProcessSend, this.cancellationTokenSource.Token);
         Task.Run(async () =>
         {
             await this.wrapper.Connect(new Uri(host), this.cancellationTokenSource.Token);
+            _ = Task.Run(this.ProcessSend, this.cancellationTokenSource.Token);
             await this.wrapper.Loop(this.cancellationTokenSource.Token);
             
         }, this.cancellationTokenSource.Token);
@@ -72,8 +72,10 @@ public class WebSocketClient : IMessageHandler, IAsyncDisposable
         return Internal(this, this.cancellationTokenSource.Token);
         static async PooledValueTask Internal(WebSocketClient self, CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            while (self.wrapper.State is WebSocketState.Open)
             {
+                if (cancellationToken.IsCancellationRequested) break;
+                
                 var lockTaken = false;
                 byte[][]? buffers;
                 try

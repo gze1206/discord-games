@@ -1,4 +1,3 @@
-using System.Net.WebSockets;
 using DiscordGames.Core.Net;
 using DiscordGames.Core.Net.Message;
 using DiscordGames.Core.Net.Serialize;
@@ -19,16 +18,17 @@ public partial class Connection : IMessageHandler
         static async PooledValueTask Internal(Connection self, GreetingMessage message)
         {
             var auth = self.cluster.GetGrain<IAuthGrain>(SingletonGrainId);
-            var userId = await auth.VerifyTokenAndGetUserId(message.DiscordAccessToken);
+            self.userId = await auth.VerifyTokenAndGetUserId(message.DiscordAccessToken);
             
-            self.logger.LogInformation("GREETING [{userId}, {discordUid}]", userId, message.DiscordAccessToken);
-            
-            await self.socket.SendAsync(
-                MessageSerializer.WriteGreetingMessage(MessageChannel.Direct, userId, message.DiscordAccessToken),
-                WebSocketMessageType.Binary,
-                WebSocketMessageFlags.EndOfMessage,
-                CancellationToken.None
-            );
+            self.logger.LogInformation("GREETING [{userId}, {discordUid}]", self.userId, message.DiscordAccessToken);
+
+            var user = self.cluster.GetGrain<IUserGrain>(self.userId);
+            await user.ReserveSend(
+                MessageSerializer.WriteGreetingMessage(MessageChannel.Direct, self.userId, message.DiscordAccessToken));
+
+            self.sendTask ??= self.ProcessSend();
+
+            ConnectionPool.I.Register(self.userId, self);
         }
     }
 

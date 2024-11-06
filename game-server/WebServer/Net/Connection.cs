@@ -3,6 +3,7 @@ using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using DiscordGames.Core.Memory;
 using DiscordGames.Core.Net.Serialize;
+using DiscordGames.Grains.Interfaces;
 using PooledAwait;
 using WebServer.LogMessages.Net;
 
@@ -16,10 +17,14 @@ public partial class Connection : IDisposable
     private readonly string address;
     private readonly ILogger<Connection> logger;
     private readonly IClusterClient cluster;
+    private readonly CancellationTokenSource sendTaskCancel;
 
     private bool isDisposed;
     private byte[]? buffer;
     private BufferReader bufferReader;
+    private Task? sendTask;
+
+    private UserId userId;
 
     public Connection(WebSocket socket, string address, ILogger<Connection> logger, IClusterClient cluster)
     {
@@ -27,6 +32,7 @@ public partial class Connection : IDisposable
         this.address = address;
         this.logger = logger;
         this.cluster = cluster;
+        this.sendTaskCancel = new CancellationTokenSource();
         this.buffer = ArrayPool<byte>.Shared.Rent(ReadBufferSize);
         this.bufferReader = new BufferReader(this.buffer);
     }
@@ -49,6 +55,23 @@ public partial class Connection : IDisposable
     private async PooledValueTask Disconnect(CancellationToken cancellationToken, WebSocketCloseStatus status = WebSocketCloseStatus.NormalClosure)
     {
         await this.socket.CloseOutputAsync(status, string.Empty, cancellationToken);
+    }
+
+    private async PooledTask ProcessSend()
+    {
+        while (this.socket.State is WebSocketState.Open)
+        {
+            if (this.sendTaskCancel.IsCancellationRequested) break;
+
+            var grain = this.cluster.GetGrain<IUserGrain>(this.userId);
+            var sendQueue = await grain.GetAndClearQueue();
+
+            foreach (var sendBuffer in sendQueue)
+            {
+                await this.socket.SendAsync(sendBuffer, WebSocketMessageType.Binary, WebSocketMessageFlags.EndOfMessage,
+                    this.sendTaskCancel.Token);
+            }
+        }
     }
 
     public ValueTask Loop(CancellationToken cancellationToken)
@@ -119,6 +142,9 @@ public partial class Connection : IDisposable
             finally
             {
                 if (self.socket.State is not WebSocketState.Closed and not WebSocketState.Aborted) await self.Disconnect(CancellationToken.None);
+                await self.sendTaskCancel.CancelAsync();
+                if (self.sendTask != null) await self.sendTask;
+                ConnectionPool.I.Unregister(self.userId);
                 self.logger.LogOnDisconnected(self.address);
             }
         }

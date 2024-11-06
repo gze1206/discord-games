@@ -14,6 +14,8 @@ public class WebSocketWrapper : IAsyncDisposable
     private const int ReadBufferSize = 1024;
     
     public event Action OnOpen = () => { };
+
+    public WebSocketState State => this.socket.State;
     
     private readonly ClientWebSocket socket;
     private readonly IMessageHandler handler;
@@ -60,7 +62,8 @@ public class WebSocketWrapper : IAsyncDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public async PooledValueTask Disconnect(CancellationToken cancellationToken, WebSocketCloseStatus status = WebSocketCloseStatus.NormalClosure)
     {
-        await this.socket.CloseOutputAsync(status, string.Empty, cancellationToken);
+        if (this.State is WebSocketState.Open or WebSocketState.CloseReceived)
+            await this.socket.CloseOutputAsync(status, string.Empty, cancellationToken);
     }
 
     public ValueTask Loop(CancellationToken cancellationToken)
