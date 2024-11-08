@@ -28,7 +28,7 @@ public partial class Connection : IMessageHandler
 
             self.sendTask ??= self.ProcessSend();
 
-            ConnectionPool.I.Register(self.userId, self);
+            if (!ConnectionPool.I.Register(self.userId, self)) CoreThrowHelper.ThrowInvalidOperation();
         }
     }
 

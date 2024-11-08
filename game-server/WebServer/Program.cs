@@ -49,12 +49,17 @@ app.Use(async (context, next) =>
         if (context.WebSockets.IsWebSocketRequest)
         {
             using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-            using var conn = new Connection(webSocket,
-                context.Connection.RemoteIpAddress?.ToString() ?? "(Unknown)",
+            var conn = ConnectionPool.I.Rent(
                 context.RequestServices.GetRequiredService<ILogger<Connection>>(),
                 context.RequestServices.GetRequiredService<IClusterClient>());
+
+            conn.Initialize(
+                webSocket,
+                context.Connection.RemoteIpAddress?.ToString() ?? "(Unknown)");
             
-            await conn.Loop(CancellationToken.None);
+            await conn.Loop();
+            
+            ConnectionPool.I.Return(conn);
         }
         else
         {

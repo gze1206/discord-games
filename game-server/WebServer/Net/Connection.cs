@@ -13,28 +13,39 @@ public partial class Connection : IDisposable
 {
     private const int ReadBufferSize = 1024;
     
-    private readonly WebSocket socket;
-    private readonly string address;
     private readonly ILogger<Connection> logger;
     private readonly IClusterClient cluster;
-    private readonly CancellationTokenSource sendTaskCancel;
 
-    private bool isDisposed;
+    private bool isDisposed = true;
+    private WebSocket socket = default!;
+    private string address = default!;
+    private CancellationTokenSource recvTaskCancel = default!;
+    private CancellationTokenSource sendTaskCancel = default!;
+
     private byte[]? buffer;
     private BufferReader bufferReader;
     private Task? sendTask;
-
     private UserId userId;
 
-    public Connection(WebSocket socket, string address, ILogger<Connection> logger, IClusterClient cluster)
+    public Connection(ILogger<Connection> logger, IClusterClient cluster)
     {
-        this.socket = socket;
-        this.address = address;
         this.logger = logger;
         this.cluster = cluster;
+    }
+
+    public void Initialize(WebSocket webSocket, string clientAddress)
+    {
+        if (!this.isDisposed) CoreThrowHelper.ThrowInvalidOperation();
+        
+        this.socket = webSocket;
+        this.address = clientAddress;
+        this.recvTaskCancel = new CancellationTokenSource();
         this.sendTaskCancel = new CancellationTokenSource();
         this.buffer = ArrayPool<byte>.Shared.Rent(ReadBufferSize);
         this.bufferReader = new BufferReader(this.buffer);
+        this.sendTask = null;
+        this.userId = default;
+        this.isDisposed = false;
     }
 
     public void Dispose()
@@ -46,6 +57,10 @@ public partial class Connection : IDisposable
             ArrayPool<byte>.Shared.Return(this.buffer);
             this.buffer = null;
         }
+        this.recvTaskCancel.Dispose();
+        this.sendTaskCancel.Dispose();
+        if (this.sendTask is { IsCompleted: false }) this.sendTask.Wait();
+        
         this.isDisposed = true;
         
         GC.SuppressFinalize(this);
@@ -74,9 +89,9 @@ public partial class Connection : IDisposable
         }
     }
 
-    public ValueTask Loop(CancellationToken cancellationToken)
+    public ValueTask Loop()
     {
-        return Internal(this, cancellationToken);
+        return Internal(this, this.recvTaskCancel.Token);
         static async PooledValueTask Internal(Connection self, CancellationToken cancellationToken)
         {
             self.logger.LogOnConnected(self.address);
@@ -142,9 +157,12 @@ public partial class Connection : IDisposable
             finally
             {
                 if (self.socket.State is not WebSocketState.Closed and not WebSocketState.Aborted) await self.Disconnect(CancellationToken.None);
+                
                 await self.sendTaskCancel.CancelAsync();
                 if (self.sendTask != null) await self.sendTask;
-                ConnectionPool.I.Unregister(self.userId);
+                
+                if (!ConnectionPool.I.Unregister(self.userId)) CoreThrowHelper.ThrowInvalidOperation();
+                
                 self.logger.LogOnDisconnected(self.address);
             }
         }
