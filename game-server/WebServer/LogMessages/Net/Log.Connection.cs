@@ -19,4 +19,10 @@ public static partial class Log
         message: "Received Text data from {socket}"
     )]
     public static partial void LogOnTextData(this ILogger logger, string socket);
+    
+    [LoggerMessage(
+        LogLevel.Trace,
+        message: "PING {ping}ms [{address} ({userId})]"
+    )]
+    public static partial void LogOnPing(this ILogger logger, string address, UserId userId, long ping);
 }

@@ -2,6 +2,7 @@ using DiscordGames.Core.Memory.Pool;
 using DiscordGames.Grains.Serialization;
 using Orleans.Serialization;
 using WebServer.Net;
+using WebServer.Services;
 
 MemoryPool.Init(new PinnedObjectHeapPool());
 
@@ -12,6 +13,8 @@ builder.WebHost.UseUrls("http://localhost:9000");
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddHostedService<HealthCheckService>();
 
 builder.Services.AddLogging(logging =>
 {
@@ -53,9 +56,13 @@ app.Use(async (context, next) =>
                 context.RequestServices.GetRequiredService<ILogger<Connection>>(),
                 context.RequestServices.GetRequiredService<IClusterClient>());
 
-            conn.Initialize(
-                webSocket,
-                context.Connection.RemoteIpAddress?.ToString() ?? "(Unknown)");
+            var address = "(Unknown)";
+            if (context.Connection.RemoteIpAddress != null)
+            {
+                address = $"{context.Connection.RemoteIpAddress}:{context.Connection.RemotePort}";
+            }
+            
+            conn.Initialize(webSocket, address);
             
             await conn.Loop();
             

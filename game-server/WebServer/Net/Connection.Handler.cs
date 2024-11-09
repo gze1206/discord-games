@@ -5,7 +5,7 @@ using DiscordGames.Grains.Interfaces;
 using DiscordGames.Grains.Interfaces.GameSessions;
 using DiscordGames.Grains.ResultCodes.PerudoSession;
 using PooledAwait;
-
+using WebServer.LogMessages.Net;
 using static DiscordGames.Grains.Constants;
 
 namespace WebServer.Net;
@@ -18,25 +18,31 @@ public partial class Connection : IMessageHandler
         static async PooledValueTask Internal(Connection self, GreetingMessage message)
         {
             var auth = self.cluster.GetGrain<IAuthGrain>(SingletonGrainId);
-            self.userId = await auth.VerifyTokenAndGetUserId(message.DiscordAccessToken);
+            self.UserId = await auth.VerifyTokenAndGetUserId(message.DiscordAccessToken);
             
-            self.logger.LogInformation("GREETING [{userId}, {discordUid}]", self.userId, message.DiscordAccessToken);
+            self.logger.LogInformation("GREETING [{userId}, {discordUid}]", self.UserId, message.DiscordAccessToken);
 
-            var user = self.cluster.GetGrain<IUserGrain>(self.userId);
-            await user.ReserveSend(
-                MessageSerializer.WriteGreetingMessage(MessageChannel.Direct, self.userId, message.DiscordAccessToken));
+            await self.PreserveSend(
+                MessageSerializer.WriteGreetingMessage(MessageChannel.Direct, self.UserId, message.DiscordAccessToken));
 
             self.sendTask ??= self.ProcessSend();
 
-            if (!ConnectionPool.I.Register(self.userId, self)) CoreThrowHelper.ThrowInvalidOperation();
+            if (!ConnectionPool.I.Register(self.UserId, self)) CoreThrowHelper.ThrowInvalidOperation();
         }
     }
 
     public ValueTask OnPing(PingMessage message)
     {
-        this.logger.LogInformation("PING [{ticks}]", message.UtcTicks);
+        var now = DateTime.UtcNow.Ticks;
+        var rtt = this.lastPintSentAtUtc == 0
+            ? 0
+            : (now - this.lastPintSentAtUtc) / TimeSpan.TicksPerMillisecond;
+        this.PingMS = (int)(rtt * 0.5);
+        this.lastPintSentAtUtc = now;
         
-        return ValueTask.CompletedTask;
+        this.logger.LogOnPing(this.Address, this.UserId, this.PingMS);
+
+        return this.PreserveSend(MessageSerializer.WritePingMessage(MessageChannel.Direct, now));
     }
 
     public ValueTask OnHostGame(HostGameMessage message)
