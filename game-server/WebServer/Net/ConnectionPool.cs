@@ -10,8 +10,6 @@ public class ConnectionPool
     private readonly ConcurrentQueue<Connection> pool = new();
     private readonly ConcurrentDictionary<UserId, Connection> activeConnections = new();
 
-    public int Actives => this.activeConnections.Count;
-
     public bool Register(Connection conn)
     {
         if (conn.UserId == 0) CoreThrowHelper.ThrowInvalidOperation();
@@ -20,8 +18,7 @@ public class ConnectionPool
 
     public bool Unregister(UserId userId) => this.activeConnections.TryRemove(userId, out _);
     
-    public Connection GetConnection(UserId userId) => this.activeConnections[userId];
-    public Connection[] GetActiveConnections() => this.activeConnections.Values.ToArray();
+    public IEnumerable<Connection> GetActiveConnections() => this.activeConnections.Values.ToArray();
 
     public Connection Rent(ILogger<Connection> logger, IClusterClient cluster)
     {
