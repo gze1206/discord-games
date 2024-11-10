@@ -57,6 +57,25 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
         }
     }
 
+    private async PooledValueTask BroadcastExceptSender(UserId sender, byte[] data)
+    {
+        foreach (var player in this.State.Players)
+        {
+            if (player == sender) continue;
+
+            var user = this.GrainFactory.GetGrain<IUserGrain>(player);
+            await user.ReserveSend(data);
+        }
+
+        foreach (var spectator in this.State.Spectators)
+        {
+            if (spectator == sender) continue;
+
+            var user = this.GrainFactory.GetGrain<IUserGrain>(spectator);
+            await user.ReserveSend(data);
+        }
+    }
+
     public ValueTask<InitPerudoSessionResult> InitSession(UserId userId, string sessionName, int maxPlayer, bool isClassicRule)
     {
         return Internal(this, userId, sessionName, maxPlayer, isClassicRule);
