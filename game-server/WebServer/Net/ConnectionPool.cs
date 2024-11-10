@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 
-namespace WebServer.Net;
+namespace DiscordGames.WebServer.Net;
 
 public class ConnectionPool
 {
@@ -12,7 +12,12 @@ public class ConnectionPool
 
     public int Actives => this.activeConnections.Count;
 
-    public bool Register(UserId userId, Connection conn) => this.activeConnections.TryAdd(userId, conn);
+    public bool Register(Connection conn)
+    {
+        if (conn.UserId == 0) CoreThrowHelper.ThrowInvalidOperation();
+        return this.activeConnections.TryAdd(conn.UserId, conn);
+    }
+
     public bool Unregister(UserId userId) => this.activeConnections.TryRemove(userId, out _);
     
     public Connection GetConnection(UserId userId) => this.activeConnections[userId];

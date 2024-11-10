@@ -1,10 +1,9 @@
-using PooledAwait;
-using WebServer.LogMessages.Services;
-using WebServer.Net;
-
+using DiscordGames.WebServer.LogMessages;
+using DiscordGames.WebServer.LogMessages.Services;
+using DiscordGames.WebServer.Net;
 using static DiscordGames.Core.Constants;
 
-namespace WebServer.Services;
+namespace DiscordGames.WebServer.Services;
 
 public class HealthCheckService : BackgroundService
 {

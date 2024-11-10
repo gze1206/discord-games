@@ -4,11 +4,11 @@ using DiscordGames.Core.Net.Serialize;
 using DiscordGames.Grains.Interfaces;
 using DiscordGames.Grains.Interfaces.GameSessions;
 using DiscordGames.Grains.ResultCodes.PerudoSession;
+using DiscordGames.WebServer.LogMessages.Net;
 using PooledAwait;
-using WebServer.LogMessages.Net;
 using static DiscordGames.Grains.Constants;
 
-namespace WebServer.Net;
+namespace DiscordGames.WebServer.Net;
 
 public partial class Connection : IMessageHandler
 {
@@ -20,27 +20,25 @@ public partial class Connection : IMessageHandler
             var auth = self.cluster.GetGrain<IAuthGrain>(SingletonGrainId);
             self.UserId = await auth.VerifyTokenAndGetUserId(message.DiscordAccessToken);
             
-            self.logger.LogInformation("GREETING [{userId}, {discordUid}]", self.UserId, message.DiscordAccessToken);
+            if (!ConnectionPool.I.Register(self)) CoreThrowHelper.ThrowInvalidOperation();
+            
+            self.logger.LogOnGreeting(self.UserId);
 
             await self.PreserveSend(
                 MessageSerializer.WriteGreetingMessage(MessageChannel.Direct, self.UserId, message.DiscordAccessToken));
-
-            self.sendTask ??= self.ProcessSend();
-
-            if (!ConnectionPool.I.Register(self.UserId, self)) CoreThrowHelper.ThrowInvalidOperation();
         }
     }
 
     public ValueTask OnPing(PingMessage message)
     {
         var now = DateTime.UtcNow.Ticks;
-        var rtt = this.lastPintSentAtUtc == 0
+        var rtt = this.lastPingSentAtUtc == 0
             ? 0
-            : (now - this.lastPintSentAtUtc) / TimeSpan.TicksPerMillisecond;
-        this.PingMS = (int)(rtt * 0.5);
-        this.lastPintSentAtUtc = now;
+            : (now - this.lastPingSentAtUtc) / TimeSpan.TicksPerMillisecond;
+        this.PingMs = (int)(rtt * 0.5);
+        this.lastPingSentAtUtc = now;
         
-        this.logger.LogOnPing(this.Address, this.UserId, this.PingMS);
+        this.logger.LogOnPing(this.Address, this.UserId, this.PingMs);
 
         return this.PreserveSend(MessageSerializer.WritePingMessage(MessageChannel.Direct, now));
     }

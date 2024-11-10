@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 
 namespace DiscordGames.Core.Memory.Pool;
 

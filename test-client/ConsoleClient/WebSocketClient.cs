@@ -1,4 +1,4 @@
-using System.Net.WebSockets;
+using System.Threading.Channels;
 using DiscordGames.Core;
 using DiscordGames.Core.Net;
 using DiscordGames.Core.Net.Message;
@@ -12,101 +12,72 @@ public class WebSocketClient : IMessageHandler, IAsyncDisposable
 {
     private readonly WebSocketWrapper wrapper;
     private readonly CancellationTokenSource cancellationTokenSource;
-    private readonly Queue<byte[]> sendQueue;
+    private readonly Channel<byte[]> sendDataChannel;
 
     private bool isDisposed;
     private long lastServerPingTicks = -1;
     private bool hasLoggedIn = false;
     private UserId userId;
-    private SpinLock sendQueueLock;
 
     public WebSocketClient(string host)
     {
         this.wrapper = new WebSocketWrapper(this);
         this.cancellationTokenSource = new CancellationTokenSource();
-        this.sendQueue = new Queue<byte[]>();
-        
+        this.sendDataChannel = Channel.CreateUnbounded<byte[]>();
+
         this.wrapper.OnOpen += this.OnOpen;
 
-        Task.Run(async () =>
-        {
-            await this.wrapper.Connect(new Uri(host), this.cancellationTokenSource.Token);
-            _ = Task.Run(this.ProcessSend, this.cancellationTokenSource.Token);
-            await this.wrapper.Loop(this.cancellationTokenSource.Token);
-            
-        }, this.cancellationTokenSource.Token);
+        _ = this.Run(host, this.cancellationTokenSource.Token);
     }
 
+    private void PreserveSend(byte[] data)
+    {
+        this.sendDataChannel.Writer.TryWrite(data);
+    }
+    
     private void OnOpen()
     {
         Console.WriteLine("Connected!");
 
-        var lockTaken = false;
-        try
-        {
-            this.sendQueueLock.TryEnter(ref lockTaken);
-            this.sendQueue.Enqueue(MessageSerializer.WriteGreetingMessage(MessageChannel.Direct, -1, Constants.BotAccessToken));
-        }
-        finally
-        {
-            if (lockTaken) this.sendQueueLock.Exit();
-        }
+        this.PreserveSend(MessageSerializer.WriteGreetingMessage(MessageChannel.Direct, -1, Constants.BotAccessToken));
+    }
+
+    private async PooledTask Run(string host, CancellationToken cancellationToken)
+    {
+        await this.wrapper.Connect(new Uri(host), cancellationToken);
+        var send = this.ProcessSend(cancellationToken);
+        var recv = this.wrapper.ProcessReceive(cancellationToken);
+
+        await Task.WhenAny(send, recv);
+        Console.WriteLine("Disconnected!");
+        await Task.WhenAll(send, recv);
     }
 
     private void SendPing()
     {
-        var lockTaken = false;
-        try
-        {
-            this.sendQueueLock.TryEnter(ref lockTaken);
-            this.sendQueue.Enqueue(MessageSerializer.WritePingMessage(MessageChannel.Direct, DateTime.UtcNow.Ticks));
-        }
-        finally
-        {
-            if (lockTaken) this.sendQueueLock.Exit();
-        }
+        this.PreserveSend(MessageSerializer.WritePingMessage(MessageChannel.Direct, DateTime.UtcNow.Ticks));
     }
 
-    private ValueTask ProcessSend()
+    private async PooledTask ProcessSend(CancellationToken cancellationToken)
     {
-        return Internal(this, this.cancellationTokenSource.Token);
-        static async PooledValueTask Internal(WebSocketClient self, CancellationToken cancellationToken)
+        await foreach (var buffer in this.sendDataChannel.Reader.ReadAllAsync(cancellationToken))
         {
-            while (self.wrapper.State is WebSocketState.Open)
+            try
             {
                 if (cancellationToken.IsCancellationRequested) break;
-                
-                var lockTaken = false;
-                byte[][]? buffers;
-                try
-                {
-                    self.sendQueueLock.TryEnter(ref lockTaken);
-                    buffers = self.sendQueue.ToArray();
-                    self.sendQueue.Clear();
-                }
-                finally
-                {
-                    if (lockTaken) self.sendQueueLock.Exit();
-                }
 
-                foreach (var buffer in buffers)
-                {
-                    await self.wrapper.SendAsync(buffer);
-                }
-
-                await Task.Delay(1000, cancellationToken);
+                await this.wrapper.SendAsync(buffer, cancellationToken);
             }
+            catch (OperationCanceledException) { }
         }
     }
 
-    public ValueTask Disconnect()
+    public async PooledValueTask Disconnect()
     {
-        return Internal(this);
-        static async PooledValueTask Internal(WebSocketClient self)
-        {
-            await self.cancellationTokenSource.CancelAsync();
-            await self.wrapper.Disconnect(CancellationToken.None);
-        }
+        this.sendDataChannel.Writer.TryComplete();
+        await this.sendDataChannel.Reader.Completion;
+        await this.cancellationTokenSource.CancelAsync();
+        await this.wrapper.Disconnect(CancellationToken.None);
     }
 
     public async ValueTask DisposeAsync()
@@ -116,27 +87,18 @@ public class WebSocketClient : IMessageHandler, IAsyncDisposable
         GC.SuppressFinalize(this);
         
         await this.Disconnect();
-        await this.wrapper.DisposeAsync();
+        this.wrapper.Dispose();
         
         this.isDisposed = true;
     }
 
     public void HostPerudo(int maxPlayers, bool isClassicRule)
     {
-        var lockTaken = false;
-        try
-        {
-            this.sendQueueLock.TryEnter(ref lockTaken);
-            this.sendQueue.Enqueue(MessageSerializer.WriteHostGameMessage(
-                MessageChannel.Direct,
-                Guid.NewGuid().ToString(),
-                new PerudoHostGameData(maxPlayers, isClassicRule)
-            ));
-        }
-        finally
-        {
-            if (lockTaken) this.sendQueueLock.Exit();
-        }
+        this.PreserveSend(MessageSerializer.WriteHostGameMessage(
+            MessageChannel.Direct,
+            Guid.NewGuid().ToString(),
+            new PerudoHostGameData(maxPlayers, isClassicRule)
+        ));
     }
 
     public ValueTask OnGreeting(GreetingMessage message)
@@ -155,12 +117,6 @@ public class WebSocketClient : IMessageHandler, IAsyncDisposable
 
     public ValueTask OnPing(PingMessage message)
     {
-        // if (0 <= this.lastServerPingTicks)
-        // {
-        //     var diff = message.UtcTicks - this.lastServerPingTicks;
-        //     Debug.WriteLine($"PING : {diff / TimeSpan.TicksPerMillisecond}ms");
-        // }
-
         this.lastServerPingTicks = message.UtcTicks;
         this.SendPing();
         return ValueTask.CompletedTask;

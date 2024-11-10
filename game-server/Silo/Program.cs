@@ -1,5 +1,5 @@
 ﻿using DiscordGames.Grains.Serialization;
-using DiscordGames.Server.Serialization.Json;
+using DiscordGames.Silo.Serialization.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

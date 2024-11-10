@@ -3,7 +3,7 @@ using DiscordGames.Grains.States;
 
 namespace DiscordGames.Grains.Interfaces.GameSessions;
 
-[Alias("Server.Grains.GameSessions.IPerudoSessionGrain")]
+[Alias("DiscordGames.Grain.GameSessions.IPerudoSessionGrain")]
 public interface IPerudoSessionGrain : IGameSessionGrain
 {
     [Alias("InitSession")]

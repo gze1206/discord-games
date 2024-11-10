@@ -1,4 +1,4 @@
-namespace WebServer.LogMessages.Net;
+namespace DiscordGames.WebServer.LogMessages.Net;
 
 public static partial class Log
 {
@@ -19,6 +19,12 @@ public static partial class Log
         message: "Received Text data from {socket}"
     )]
     public static partial void LogOnTextData(this ILogger logger, string socket);
+
+    [LoggerMessage(
+        LogLevel.Information,
+        message: "GREETING {userId}"
+    )]
+    public static partial void LogOnGreeting(this ILogger logger, UserId userId);
     
     [LoggerMessage(
         LogLevel.Trace,

@@ -5,7 +5,8 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RootNamespace>DiscordGames.Server</RootNamespace>
+        <RootNamespace>DiscordGames.Silo</RootNamespace>
+        <AssemblyName>Silo</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>

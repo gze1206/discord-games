@@ -1,6 +1,4 @@
 using System;
-using DiscordGames.Core.Memory;
-using DiscordGames.Core.Net.Message;
 
 namespace DiscordGames.Core.Net.Serialize;
 

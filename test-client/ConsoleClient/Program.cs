@@ -9,6 +9,7 @@ try
 {
     while (Console.ReadLine() is { } cmd)
     {
+        if (string.IsNullOrWhiteSpace(cmd)) break;
         if (cmd == "q") break;
 
         var tokens = cmd.ToLower().Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);

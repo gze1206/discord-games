@@ -1,7 +1,7 @@
 using DiscordGames.Grains.Serialization.Json;
 using Orleans.Serialization;
 
-namespace DiscordGames.Server.Serialization.Json;
+namespace DiscordGames.Silo.Serialization.Json;
 
 public static class CustomJsonConverterExtension
 {

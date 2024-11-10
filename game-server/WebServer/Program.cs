@@ -1,8 +1,8 @@
 using DiscordGames.Core.Memory.Pool;
 using DiscordGames.Grains.Serialization;
+using DiscordGames.WebServer.Net;
+using DiscordGames.WebServer.Services;
 using Orleans.Serialization;
-using WebServer.Net;
-using WebServer.Services;
 
 MemoryPool.Init(new PinnedObjectHeapPool());
 
