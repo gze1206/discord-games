@@ -15,6 +15,12 @@ public static partial class Log
     public static partial void LogOnDisconnected(this ILogger logger, string socket);
     
     [LoggerMessage(
+        LogLevel.Information,
+        message: "Leave user {userId} from session {sessionUid}"
+    )]
+    public static partial void LogLeaveFromSession(this ILogger logger, UserId userId, Guid sessionUid);
+    
+    [LoggerMessage(
         LogLevel.Warning,
         message: "Received Text data from {socket}"
     )]

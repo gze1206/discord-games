@@ -25,9 +25,7 @@ public class PerudoSessionState
     [Id(11)] public int LastBidQuantity { get; internal set; } = -1;
     [Id(12)] public int LastBidFace { get; internal set; } = -1;
 
-    public PerudoSessionState()
-    {
-    }
+    public PerudoSessionState() { }
 
     [JsonConstructor]
     public PerudoSessionState(HashSet<UserId> players,

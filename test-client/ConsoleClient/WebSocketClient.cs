@@ -30,7 +30,7 @@ public class WebSocketClient : IMessageHandler, IAsyncDisposable
         _ = this.Run(host, this.cancellationTokenSource.Token);
     }
 
-    private void PreserveSend(byte[] data)
+    private void ReserveSend(byte[] data)
     {
         this.sendDataChannel.Writer.TryWrite(data);
     }
@@ -39,7 +39,7 @@ public class WebSocketClient : IMessageHandler, IAsyncDisposable
     {
         Console.WriteLine("Connected!");
 
-        this.PreserveSend(MessageSerializer.WriteGreetingMessage(MessageChannel.Direct, -1, Constants.BotAccessToken));
+        this.ReserveSend(MessageSerializer.WriteGreetingMessage(MessageChannel.Direct, -1, Constants.BotAccessToken));
     }
 
     private async PooledTask Run(string host, CancellationToken cancellationToken)
@@ -55,7 +55,7 @@ public class WebSocketClient : IMessageHandler, IAsyncDisposable
 
     private void SendPing()
     {
-        this.PreserveSend(MessageSerializer.WritePingMessage(MessageChannel.Direct, DateTime.UtcNow.Ticks));
+        this.ReserveSend(MessageSerializer.WritePingMessage(MessageChannel.Direct, DateTime.UtcNow.Ticks));
     }
 
     private async PooledTask ProcessSend(CancellationToken cancellationToken)
@@ -94,7 +94,7 @@ public class WebSocketClient : IMessageHandler, IAsyncDisposable
 
     public void HostPerudo(int maxPlayers, bool isClassicRule)
     {
-        this.PreserveSend(MessageSerializer.WriteHostGameMessage(
+        this.ReserveSend(MessageSerializer.WriteHostGameMessage(
             MessageChannel.Direct,
             Guid.NewGuid().ToString(),
             new PerudoHostGameData(maxPlayers, isClassicRule)

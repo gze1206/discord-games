@@ -12,7 +12,7 @@ public class ConnectionPool
 
     public bool Register(Connection conn)
     {
-        if (conn.UserId == 0) CoreThrowHelper.ThrowInvalidOperation();
+        if (conn.UserId == 0) CoreThrowHelper.ThrowInvalidUserId();
         return this.activeConnections.TryAdd(conn.UserId, conn);
     }
 

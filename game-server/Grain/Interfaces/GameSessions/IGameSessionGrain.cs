@@ -9,5 +9,6 @@ public interface IGameSessionGrain : IGrainWithGuidKey
     [Alias("LeaveGame")] ValueTask<LeavePlayerResult> LeavePlayer(UserId userId);
     [Alias("JoinAsSpector")] ValueTask<JoinSpectatorResult> JoinSpectator(UserId userId);
     [Alias("LeaveSpector")] ValueTask<LeaveSpectatorResult> LeaveSpectator(UserId userId);
+    [Alias("LeaveUser")] ValueTask LeaveUser(UserId userId);
     [Alias("StartGame")] ValueTask<StartGameResult> StartGame(UserId userId);
 }

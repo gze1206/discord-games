@@ -6,6 +6,8 @@
     </Usings>
     <Exceptions>
         <Exception Type="InvalidOperationException" />
+        <Exception Name="AlreadyDisposed" Type="ObjectDisposedException" Message="이미 Dispose되었습니다." />
+        <Exception Name="InvalidUserId" Type="InvalidOperationException" Message="올바르지 않은 UserId입니다." />
         <Exception Name="ReadBufferOutOfRange" Type="ArgumentOutOfRangeException" Message="읽기 버퍼의 허용된 크기를 초과하여 접근하려 했습니다." />
         <Exception Name="WriteBufferOutOfRange" Type="ArgumentOutOfRangeException" Message="쓰기 버퍼의 허용된 크기를 초과하여 접근하려 했습니다." />
         <Exception Name="SchemeVersion" Type="MessageSchemeVersionException" Message="메시지의 SchemeVersion이 유효하지 않습니다." />

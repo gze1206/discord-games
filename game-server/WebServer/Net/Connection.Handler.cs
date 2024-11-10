@@ -19,12 +19,15 @@ public partial class Connection : IMessageHandler
         {
             var auth = self.cluster.GetGrain<IAuthGrain>(SingletonGrainId);
             self.UserId = await auth.VerifyTokenAndGetUserId(message.DiscordAccessToken);
+
+            var user = self.cluster.GetGrain<IUserGrain>(self.UserId);
+            await user.SetConnect(true);
             
-            if (!ConnectionPool.I.Register(self)) CoreThrowHelper.ThrowInvalidOperation();
+            if (!ConnectionPool.I.Register(self)) WebServerThrowHelper.ThrowFailedToRegisterConnection();
             
             self.logger.LogOnGreeting(self.UserId);
 
-            await self.PreserveSend(
+            await user.ReserveSend(
                 MessageSerializer.WriteGreetingMessage(MessageChannel.Direct, self.UserId, message.DiscordAccessToken));
         }
     }
@@ -40,7 +43,7 @@ public partial class Connection : IMessageHandler
         
         this.logger.LogOnPing(this.Address, this.UserId, this.PingMs);
 
-        return this.PreserveSend(MessageSerializer.WritePingMessage(MessageChannel.Direct, now));
+        return this.ReserveSend(MessageSerializer.WritePingMessage(MessageChannel.Direct, now));
     }
 
     public ValueTask OnHostGame(HostGameMessage message)
@@ -55,7 +58,7 @@ public partial class Connection : IMessageHandler
                 {
                     var session = self.cluster.GetGrain<IPerudoSessionGrain>(Guid.NewGuid());
                     var result = await session.InitSession(
-                        -1,
+                        self.UserId,
                         message.Name,
                         perudo.MaxPlayers,
                         perudo.IsClassicRule

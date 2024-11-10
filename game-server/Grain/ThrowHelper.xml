@@ -11,6 +11,10 @@
         <Exception Name="BotUserPoolExhausted" Type="InvalidOperationException" Message="Bot 유저 풀이 고갈되었습니다." />
         <Exception Name="InvalidBotUser" Type="InvalidOperationException" Message="올바른 Bot 유저가 아닙니다." />
 
+        <!-- User -->
+        <Exception Name="AlreadyConnectedUser" Type="InvalidOperationException" Message="이미 연결 상태인 유저입니다." />
+        <Exception Name="AlreadyDisconnectedUser" Type="InvalidOperationException" Message="이미 연결 해제 상태인 유저입니다." />
+        
         <!-- GameSession -->
         <Exception Name="InvalidTurnOrderState" Type="InvalidOperationException" Message="State의 현재 턴 정보와 턴 순서 정보가 불일치함" />
         <Exception Name="InvalidTurnPlaying" Type="InvalidOperationException" Message="탈락자의 턴이 진행 중입니다" />

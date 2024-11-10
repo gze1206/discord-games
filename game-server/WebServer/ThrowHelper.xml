@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ThrowHelper Name="WebServer">
+    <Usings>
+        <Using>System</Using>
+    </Usings>
+    <Exceptions>
+        <Exception Name="FailedToRegisterConnection" Type="InvalidOperationException" Message="연결 정보를 등록하는 데 실패했습니다." />
+        <Exception Name="FailedToUnregisterConnection" Type="InvalidOperationException" Message="연결 정보를 등록 해제하는 데 실패했습니다." />
+    </Exceptions>
+</ThrowHelper>

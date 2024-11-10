@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using DiscordGames.Core.Memory;
 using DiscordGames.Core.Net.Serialize;
 using DiscordGames.Grains.Interfaces;
+using DiscordGames.Grains.Interfaces.GameSessions;
 using DiscordGames.WebServer.LogMessages;
 using DiscordGames.WebServer.LogMessages.Net;
 using PooledAwait;
@@ -42,7 +43,7 @@ public partial class Connection : IDisposable
 
     public void Initialize(WebSocket webSocket, string clientAddress)
     {
-        if (!this.isDisposed) CoreThrowHelper.ThrowInvalidOperation();
+        if (!this.isDisposed) CoreThrowHelper.ThrowAlreadyDisposed();
         
         this.socket = webSocket;
         this.recvTaskCancel = new CancellationTokenSource();
@@ -94,9 +95,9 @@ public partial class Connection : IDisposable
         await this.socket.CloseOutputAsync(status, string.Empty, cancellationToken);
     }
     
-    private ValueTask PreserveSend(byte[] data)
+    private ValueTask ReserveSend(byte[] data)
     {
-        if (this.UserId == 0) CoreThrowHelper.ThrowInvalidOperation();
+        if (this.UserId == 0) return ValueTask.FromException(CoreThrowHelper.InvalidUserId);
 
         var user = this.cluster.GetGrain<IUserGrain>(this.UserId);
         return user.ReserveSend(data);
@@ -197,7 +198,19 @@ public partial class Connection : IDisposable
             await this.sendTaskCancel.CancelAsync();
             if (this.sendTask != null) await this.sendTask;
             
-            if (!ConnectionPool.I.Unregister(this.UserId)) CoreThrowHelper.ThrowInvalidOperation();
+            if (!ConnectionPool.I.Unregister(this.UserId)) WebServerThrowHelper.ThrowFailedToUnregisterConnection();
+
+            var user = this.cluster.GetGrain<IUserGrain>(this.UserId);
+            var sessionUid = await user.GetSessionUid();
+
+            if (sessionUid != Guid.Empty)
+            {
+                var session = this.cluster.GetGrain<IGameSessionGrain>(sessionUid);
+                await session.LeaveUser(this.UserId);
+                this.logger.LogLeaveFromSession(this.UserId, sessionUid);
+            }
+            
+            await user.SetConnect(false);
             
             this.logger.LogOnDisconnected(this.Address);
         }
