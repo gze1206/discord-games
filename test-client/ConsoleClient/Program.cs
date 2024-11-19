@@ -20,7 +20,7 @@ try
                 switch (tokens[1])
                 {
                     case "perudo":
-                        socket.HostPerudo(4, false);
+                        socket.HostPerudo("BOT_PERUDO", "TEST_PERUDO", 4, false);
                         continue;
                 }
 

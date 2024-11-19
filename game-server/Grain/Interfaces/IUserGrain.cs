@@ -3,8 +3,8 @@ namespace DiscordGames.Grains.Interfaces;
 [Alias("DiscordGames.Grains.Interfaces.IUserGrain")]
 public interface IUserGrain : IGrainWithIntegerKey
 {
-    [Alias("GetSessionUid")] ValueTask<Guid> GetSessionUid();
-    [Alias("SetSessionUid")] ValueTask SetSessionUid(Guid newSessionUid);
+    [Alias("GetSessionUid")] ValueTask<string?> GetSessionUid();
+    [Alias("SetSessionUid")] ValueTask SetSessionUid(string? newSessionUid);
     
     [Alias("IsConnected")] ValueTask<bool> IsConnected();
     [Alias("SetConnect")] ValueTask SetConnect(bool connected);

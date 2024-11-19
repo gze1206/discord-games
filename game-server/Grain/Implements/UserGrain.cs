@@ -5,7 +5,7 @@ namespace DiscordGames.Grains.Implements;
 public class UserGrain : Grain, IUserGrain
 {
     private Queue<byte[]> sendQueue = default!;
-    private Guid sessionUid;
+    private string? sessionUid;
     private bool isConnected;
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
@@ -15,9 +15,9 @@ public class UserGrain : Grain, IUserGrain
     }
     
     public ValueTask<bool> IsConnected() => ValueTask.FromResult(this.isConnected);
-    public ValueTask<Guid> GetSessionUid() => ValueTask.FromResult(this.sessionUid);
+    public ValueTask<string?> GetSessionUid() => ValueTask.FromResult(this.sessionUid);
 
-    public ValueTask SetSessionUid(Guid newSessionUid)
+    public ValueTask SetSessionUid(string? newSessionUid)
     {
         this.sessionUid = newSessionUid;
         return ValueTask.CompletedTask;
@@ -30,7 +30,7 @@ public class UserGrain : Grain, IUserGrain
             if (this.isConnected) return ValueTask.FromException(GrainThrowHelper.AlreadyConnectedUser);
         
             this.sendQueue.Clear();
-            this.sessionUid = Guid.Empty;
+            this.sessionUid = null;
             this.isConnected = true;
         }
         else

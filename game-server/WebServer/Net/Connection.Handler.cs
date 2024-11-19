@@ -56,7 +56,7 @@ public partial class Connection : IMessageHandler
             {
                 case PerudoHostGameData perudo:
                 {
-                    var session = self.cluster.GetGrain<IPerudoSessionGrain>(Guid.NewGuid());
+                    var session = self.cluster.GetGrain<IPerudoSessionGrain>(message.SessionId);
                     var result = await session.InitSession(
                         self.UserId,
                         message.Name,
@@ -65,7 +65,7 @@ public partial class Connection : IMessageHandler
                     );
                     
                     if (result != InitPerudoSessionResult.Ok) self.logger.LogWarning("RESULT NOT OK [{result}]", result);
-                    self.logger.LogInformation("SESSION ID : {id}", session.GetPrimaryKey());
+                    self.logger.LogInformation("SESSION ID : {id}", session.GetPrimaryKeyString());
                     break;
                 }
                 default:

@@ -203,7 +203,7 @@ public partial class Connection : IDisposable
             var user = this.cluster.GetGrain<IUserGrain>(this.UserId);
             var sessionUid = await user.GetSessionUid();
 
-            if (sessionUid != Guid.Empty)
+            if (sessionUid is not null)
             {
                 var session = this.cluster.GetGrain<IGameSessionGrain>(sessionUid);
                 await session.LeaveUser(this.UserId);

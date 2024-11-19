@@ -92,11 +92,12 @@ public class WebSocketClient : IMessageHandler, IAsyncDisposable
         this.isDisposed = true;
     }
 
-    public void HostPerudo(int maxPlayers, bool isClassicRule)
+    public void HostPerudo(string sessionId, string sessionName, int maxPlayers, bool isClassicRule)
     {
         this.ReserveSend(MessageSerializer.WriteHostGameMessage(
             MessageChannel.Direct,
-            Guid.NewGuid().ToString(),
+            sessionId,
+            sessionName,
             new PerudoHostGameData(maxPlayers, isClassicRule)
         ));
     }

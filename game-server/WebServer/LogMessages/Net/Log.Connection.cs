@@ -18,7 +18,7 @@ public static partial class Log
         LogLevel.Information,
         message: "Leave user {userId} from session {sessionUid}"
     )]
-    public static partial void LogLeaveFromSession(this ILogger logger, UserId userId, Guid sessionUid);
+    public static partial void LogLeaveFromSession(this ILogger logger, UserId userId, string sessionUid);
     
     [LoggerMessage(
         LogLevel.Warning,

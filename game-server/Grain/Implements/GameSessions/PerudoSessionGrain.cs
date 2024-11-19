@@ -98,9 +98,9 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
                 self.playerInfoSelector = new PlayerInfoSelector(isClassicRule ? 5 : 3);
             
                 var user = self.GrainFactory.GetGrain<IUserGrain>(userId);
-                await user.SetSessionUid(self.GetPrimaryKey());
+                await user.SetSessionUid(self.GetPrimaryKeyString());
             
-                self.logger.LogPerudoInitSessionOk(self.GetPrimaryKey(), userId, sessionName, maxPlayer, isClassicRule);
+                self.logger.LogPerudoInitSessionOk(self.GetPrimaryKeyString(), userId, sessionName, maxPlayer, isClassicRule);
             
                 return InitPerudoSessionResult.Ok;
             }
@@ -123,9 +123,9 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
                 self.State.Players.Add(userId);
 
                 var user = self.GrainFactory.GetGrain<IUserGrain>(userId);
-                await user.SetSessionUid(self.GetPrimaryKey());
+                await user.SetSessionUid(self.GetPrimaryKeyString());
                 
-                self.logger.LogJoinPlayerOk(self.GetPrimaryKey(), userId);
+                self.logger.LogJoinPlayerOk(self.GetPrimaryKeyString(), userId);
 
                 return JoinPlayerResult.Ok;
             }
@@ -155,9 +155,9 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
                 }
 
                 var user = self.GrainFactory.GetGrain<IUserGrain>(userId);
-                await user.SetSessionUid(Guid.Empty);
+                await user.SetSessionUid(null);
                 
-                self.logger.LogLeavePlayerOk(self.GetPrimaryKey(), userId);
+                self.logger.LogLeavePlayerOk(self.GetPrimaryKeyString(), userId);
                 
                 return LeavePlayerResult.Ok;
             }
@@ -183,11 +183,11 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
                 }
                 
                 var user = self.GrainFactory.GetGrain<IUserGrain>(userId);
-                await user.SetSessionUid(self.GetPrimaryKey());
+                await user.SetSessionUid(self.GetPrimaryKeyString());
 
                 self.State.Spectators.Add(userId);
                 
-                self.logger.LogJoinSpectatorOk(self.GetPrimaryKey(), userId);
+                self.logger.LogJoinSpectatorOk(self.GetPrimaryKeyString(), userId);
 
                 return JoinSpectatorResult.Ok;
             }
@@ -204,9 +204,9 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
                 if (!self.State.Spectators.Remove(userId)) return LeaveSpectatorResult.NotJoinedUser;
             
                 var user = self.GrainFactory.GetGrain<IUserGrain>(userId);
-                await user.SetSessionUid(Guid.Empty);
+                await user.SetSessionUid(null);
             
-                self.logger.LogLeaveSpectatorOk(self.GetPrimaryKey(), userId);
+                self.logger.LogLeaveSpectatorOk(self.GetPrimaryKeyString(), userId);
             
                 return LeaveSpectatorResult.Ok;
             }
@@ -253,7 +253,7 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
                 self.State.IsPlaying = true;
                 await self.StartRound(true);
                 
-                self.logger.LogStartGameOk(self.GetPrimaryKey(), userId);
+                self.logger.LogStartGameOk(self.GetPrimaryKeyString(), userId);
                 
                 return StartGameResult.Ok;
             }
@@ -299,7 +299,7 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
             this.lastBidderInfo = this.currentTurnInfo;
             this.currentTurnInfo = this.State.TurnOrder[this.State.CurrentTurn];
 
-            this.logger.LogPerudoPlaceBidOk(this.GetPrimaryKey(), userId, lastQuantity, lastFace, quantity, face);
+            this.logger.LogPerudoPlaceBidOk(this.GetPrimaryKeyString(), userId, lastQuantity, lastFace, quantity, face);
             
             return ValueTask.FromResult(PlaceBidResult.Ok);
         }
@@ -352,7 +352,7 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
                     await self.StartRound();
                 }
 
-                self.logger.LogPerudoChallengeOk(self.GetPrimaryKey(), userId, lastBidder, lastBidQuantity, face, actualQuantity);
+                self.logger.LogPerudoChallengeOk(self.GetPrimaryKeyString(), userId, lastBidder, lastBidQuantity, face, actualQuantity);
                 
                 return ChallengeResult.Ok;
             }
@@ -380,7 +380,7 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
             this.State.LastBidFace = -1;
             this.lastBidderInfo = null;
             
-            this.logger.LogPerudoStartRound(this.GetPrimaryKey(), this.currentTurnInfo?.UserId ?? throw new InvalidOperationException("생존한 플레이어가 없습니다"));
+            this.logger.LogPerudoStartRound(this.GetPrimaryKeyString(), this.currentTurnInfo?.UserId ?? throw new InvalidOperationException("생존한 플레이어가 없습니다"));
 
             return ValueTask.CompletedTask;
         }

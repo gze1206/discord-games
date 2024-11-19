@@ -3,7 +3,7 @@
 namespace DiscordGames.Grains.Interfaces.GameSessions;
 
 [Alias("DiscordGames.Grain.IGameSessionGrain")]
-public interface IGameSessionGrain : IGrainWithGuidKey
+public interface IGameSessionGrain : IGrainWithStringKey
 {
     [Alias("JoinGame")] ValueTask<JoinPlayerResult> JoinPlayer(UserId userId);
     [Alias("LeaveGame")] ValueTask<LeavePlayerResult> LeavePlayer(UserId userId);
