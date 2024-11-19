@@ -5,7 +5,6 @@ namespace DiscordGames.Grains.States;
 
 using static PerudoSessionGrain;
 
-// ReSharper disable once ClassNeverInstantiated.Global
 [GenerateSerializer]
 [Alias("DiscordGames.Grain.States.PerudoSessionState")]
 public class PerudoSessionState

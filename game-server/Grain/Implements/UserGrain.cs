@@ -1,25 +1,26 @@
 using DiscordGames.Grains.Interfaces;
+using DiscordGames.Grains.States;
 
 namespace DiscordGames.Grains.Implements;
 
-public class UserGrain : Grain, IUserGrain
+public class UserGrain : Grain<UserState>, IUserGrain
 {
     private Queue<byte[]> sendQueue = default!;
-    private string? sessionUid;
-    private bool isConnected;
 
     public override Task OnActivateAsync(CancellationToken cancellationToken)
     {
         this.sendQueue = new Queue<byte[]>();
         return Task.CompletedTask;
     }
+
+    public Task<UserState> GetState() => Task.FromResult(this.State);
     
-    public ValueTask<bool> IsConnected() => ValueTask.FromResult(this.isConnected);
-    public ValueTask<string?> GetSessionUid() => ValueTask.FromResult(this.sessionUid);
+    public ValueTask<bool> IsConnected() => ValueTask.FromResult(this.State.IsConnected);
+    public ValueTask<string?> GetSessionUid() => ValueTask.FromResult(this.State.PlayingSessionId);
 
     public ValueTask SetSessionUid(string? newSessionUid)
     {
-        this.sessionUid = newSessionUid;
+        this.State.PlayingSessionId = newSessionUid;
         return ValueTask.CompletedTask;
     }
 
@@ -27,17 +28,17 @@ public class UserGrain : Grain, IUserGrain
     {
         if (connected)
         {
-            if (this.isConnected) return ValueTask.FromException(GrainThrowHelper.AlreadyConnectedUser);
+            if (this.State.IsConnected) return ValueTask.FromException(GrainThrowHelper.AlreadyConnectedUser);
         
             this.sendQueue.Clear();
-            this.sessionUid = null;
-            this.isConnected = true;
+            this.State.PlayingSessionId = null;
+            this.State.IsConnected = true;
         }
         else
         {
-            if (!this.isConnected) return ValueTask.FromException(GrainThrowHelper.AlreadyDisconnectedUser);
+            if (!this.State.IsConnected) return ValueTask.FromException(GrainThrowHelper.AlreadyDisconnectedUser);
 
-            this.isConnected = false;
+            this.State.IsConnected = false;
         }
 
         return ValueTask.CompletedTask;
@@ -45,7 +46,7 @@ public class UserGrain : Grain, IUserGrain
 
     public ValueTask ReserveSend(byte[] data)
     {
-        if (!this.isConnected) return ValueTask.CompletedTask;
+        if (!this.State.IsConnected) return ValueTask.CompletedTask;
         if (data.Length <= 0) return ValueTask.FromException(CoreThrowHelper.InvalidOperation);
         
         this.sendQueue.Enqueue(data);
@@ -54,7 +55,7 @@ public class UserGrain : Grain, IUserGrain
 
     public ValueTask<byte[][]> GetAndClearQueue()
     {
-        if (!this.isConnected) return ValueTask.FromResult(Array.Empty<byte[]>());
+        if (!this.State.IsConnected) return ValueTask.FromResult(Array.Empty<byte[]>());
         
         var queue = this.sendQueue.ToArray();
         this.sendQueue.Clear();
