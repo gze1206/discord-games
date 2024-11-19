@@ -1,7 +1,7 @@
+// ReSharper disable MemberCanBePrivate.Global
 using System;
 using System.Text;
 using DiscordGames.Core.Memory;
-using DiscordGames.Core.Net.Message;
 
 namespace DiscordGames.Core.Net.Serialize;
 
@@ -85,6 +85,17 @@ public static partial class MessageSerializer
         span = writer.RequestSpan(length);
         succeed &= (0 < Encoding.UTF8.GetBytes(value.AsSpan(), span) || value!.Length == 0);
         return succeed;
+    }
+
+    public static ResultCode ReadResultCode(this ref BufferReader reader)
+    {
+        return (ResultCode)BitConverter.ToUInt32(reader.Slice(sizeof(uint)));
+    }
+
+    public static bool Write(this ref BufferWriter writer, ResultCode value)
+    {
+        var span = writer.RequestSpan(sizeof(uint));
+        return BitConverter.TryWriteBytes(span, (uint)value);
     }
 
     public static MessageHeader ReadHeader(this ref BufferReader reader)

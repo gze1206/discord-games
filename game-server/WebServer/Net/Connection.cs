@@ -3,7 +3,9 @@
 using System.Buffers;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
+using DiscordGames.Core;
 using DiscordGames.Core.Memory;
+using DiscordGames.Core.Net;
 using DiscordGames.Core.Net.Serialize;
 using DiscordGames.Grains.Interfaces;
 using DiscordGames.Grains.Interfaces.GameSessions;
@@ -102,6 +104,10 @@ public partial class Connection : IDisposable
         var user = this.cluster.GetGrain<IUserGrain>(this.UserId);
         return user.ReserveSend(data);
     }
+
+    private ValueTask ReserveSend(ResultCode resultCode) => this.ReserveSend(
+        MessageSerializer.WriteErrorMessage(MessageChannel.Direct, resultCode)
+    );
 
     private async PooledTask ProcessSend()
     {

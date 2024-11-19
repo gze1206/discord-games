@@ -1,14 +1,14 @@
-﻿using DiscordGames.Grains.ResultCodes.CommonSession;
+﻿using DiscordGames.Core;
 
 namespace DiscordGames.Grains.Interfaces.GameSessions;
 
 [Alias("DiscordGames.Grain.IGameSessionGrain")]
 public interface IGameSessionGrain : IGrainWithStringKey
 {
-    [Alias("JoinGame")] ValueTask<JoinPlayerResult> JoinPlayer(UserId userId);
-    [Alias("LeaveGame")] ValueTask<LeavePlayerResult> LeavePlayer(UserId userId);
-    [Alias("JoinAsSpector")] ValueTask<JoinSpectatorResult> JoinSpectator(UserId userId);
-    [Alias("LeaveSpector")] ValueTask<LeaveSpectatorResult> LeaveSpectator(UserId userId);
-    [Alias("LeaveUser")] ValueTask LeaveUser(UserId userId);
-    [Alias("StartGame")] ValueTask<StartGameResult> StartGame(UserId userId);
+    [Alias("JoinGame")] ValueTask<ResultCode> JoinPlayer(UserId userId);
+    [Alias("LeaveGame")] ValueTask<ResultCode> LeavePlayer(UserId userId);
+    [Alias("JoinAsSpector")] ValueTask<ResultCode> JoinSpectator(UserId userId);
+    [Alias("LeaveSpector")] ValueTask<ResultCode> LeaveSpectator(UserId userId);
+    [Alias("LeaveUser")] ValueTask<ResultCode> LeaveUser(UserId userId);
+    [Alias("StartGame")] ValueTask<ResultCode> StartGame(UserId userId);
 }

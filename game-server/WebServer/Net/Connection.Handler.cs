@@ -1,9 +1,9 @@
+using DiscordGames.Core;
 using DiscordGames.Core.Net;
 using DiscordGames.Core.Net.Message;
 using DiscordGames.Core.Net.Serialize;
 using DiscordGames.Grains.Interfaces;
 using DiscordGames.Grains.Interfaces.GameSessions;
-using DiscordGames.Grains.ResultCodes.PerudoSession;
 using DiscordGames.WebServer.LogMessages.Net;
 using PooledAwait;
 using static DiscordGames.Grains.Constants;
@@ -62,8 +62,13 @@ public partial class Connection : IMessageHandler
                         perudo.MaxPlayers,
                         perudo.IsClassicRule
                     );
+
+                    if (result != ResultCode.Ok)
+                    {
+                        self.logger.LogWarning("RESULT NOT OK [{result}]", result);
+                        await self.ReserveSend(result);
+                    }
                     
-                    if (result != InitPerudoSessionResult.Ok) self.logger.LogWarning("RESULT NOT OK [{result}]", result);
                     self.logger.LogInformation("SESSION ID : {id}", session.GetPrimaryKeyString());
                     break;
                 }
@@ -86,6 +91,7 @@ public partial class Connection : IMessageHandler
                     if (string.IsNullOrWhiteSpace(sessionId))
                     {
                         self.logger.LogError("SESSION NOT FOUND [userId : {userId}]", self.UserId);
+                        await self.ReserveSend(ResultCode.SessionNotFound);
                         break;
                     }
 
@@ -97,7 +103,12 @@ public partial class Connection : IMessageHandler
                         perudo.IsClassicRule
                     );
                     
-                    if (result != EditPerudoSessionResult.Ok) self.logger.LogWarning("RESULT NOT OK [{result}]", result);
+                    if (result != ResultCode.Ok)
+                    {
+                        self.logger.LogWarning("RESULT NOT OK [{result}]", result);
+                        await self.ReserveSend(result);
+                    }
+                    
                     self.logger.LogInformation("SESSION ID : {id}", session.GetPrimaryKeyString());
                     
                     break;
@@ -106,4 +117,6 @@ public partial class Connection : IMessageHandler
             }
         }
     }
+
+    public ValueTask OnError(ErrorMessage message) => throw CoreThrowHelper.InvalidOperation;
 }

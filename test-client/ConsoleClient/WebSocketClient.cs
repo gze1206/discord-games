@@ -111,6 +111,12 @@ public class WebSocketClient : IMessageHandler, IAsyncDisposable
         ));
     }
 
+    public ValueTask OnError(ErrorMessage message)
+    {
+        Console.WriteLine($"RESULT CODE : {message.ResultCode}");
+        return ValueTask.CompletedTask;
+    }
+
     public ValueTask OnGreeting(GreetingMessage message)
     {
         if (this.hasLoggedIn)
