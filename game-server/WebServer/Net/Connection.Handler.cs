@@ -51,7 +51,6 @@ public partial class Connection : IMessageHandler
         return Internal(this, message);
         static async PooledValueTask Internal(Connection self, HostGameMessage message)
         {
-            using var _ = self.logger.BeginScope("HOST GAME");
             switch (message.Data)
             {
                 case PerudoHostGameData perudo:
@@ -68,11 +67,43 @@ public partial class Connection : IMessageHandler
                     self.logger.LogInformation("SESSION ID : {id}", session.GetPrimaryKeyString());
                     break;
                 }
-                default:
-                    CoreThrowHelper.ThrowInvalidOperation();
-                    break;
+                default: throw CoreThrowHelper.InvalidOperation;
             }
-            self.logger.LogInformation("HOST [{name}]", message.Name);
+        }
+    }
+
+    public ValueTask OnEditGame(EditGameMessage message)
+    {
+        return Internal(this, message);
+        static async PooledValueTask Internal(Connection self, EditGameMessage message)
+        {
+            switch (message.Data)
+            {
+                case PerudoHostGameData perudo:
+                {
+                    var user = self.cluster.GetGrain<IUserGrain>(self.UserId);
+                    var sessionId = await user.GetSessionUid();
+                    if (string.IsNullOrWhiteSpace(sessionId))
+                    {
+                        self.logger.LogError("SESSION NOT FOUND [userId : {userId}]", self.UserId);
+                        break;
+                    }
+
+                    var session = self.cluster.GetGrain<IPerudoSessionGrain>(sessionId);
+                    var result = await session.EditSession(
+                        self.UserId,
+                        message.Name,
+                        perudo.MaxPlayers,
+                        perudo.IsClassicRule
+                    );
+                    
+                    if (result != EditPerudoSessionResult.Ok) self.logger.LogWarning("RESULT NOT OK [{result}]", result);
+                    self.logger.LogInformation("SESSION ID : {id}", session.GetPrimaryKeyString());
+                    
+                    break;
+                }
+                default: throw CoreThrowHelper.InvalidOperation;
+            }
         }
     }
 }

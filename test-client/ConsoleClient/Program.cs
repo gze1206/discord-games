@@ -12,15 +12,25 @@ try
         if (string.IsNullOrWhiteSpace(cmd)) break;
         if (cmd == "q") break;
 
-        var tokens = cmd.ToLower().Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-        switch (tokens[0])
+        var tokens = cmd.Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        switch (tokens[0].ToLower())
         {
             case "host":
-                if (tokens.Length != 2) continue;
-                switch (tokens[1])
+                if (tokens.Length != 4) goto default;
+                switch (tokens[1].ToLower())
                 {
                     case "perudo":
-                        socket.HostPerudo("BOT_PERUDO", "TEST_PERUDO", 4, false);
+                        socket.HostPerudo(tokens[2], tokens[3], 4, false);
+                        continue;
+                }
+
+                goto default;
+            case "edit":
+                if (tokens.Length != 3) goto default;
+                switch (tokens[1].ToLower())
+                {
+                    case "perudo":
+                        socket.EditPerudo(tokens[2], 4, false);
                         continue;
                 }
 

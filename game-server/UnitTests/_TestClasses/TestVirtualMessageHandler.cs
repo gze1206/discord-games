@@ -10,5 +10,6 @@ public class TestVirtualMessageHandler : IMessageHandler
 
     public virtual ValueTask OnGreeting(GreetingMessage message) { return ValueTask.CompletedTask; }
 
-    public ValueTask OnHostGame(HostGameMessage message) => throw new InvalidOperationException();
+    public ValueTask OnHostGame(HostGameMessage message) => throw CoreThrowHelper.InvalidOperation;
+    public ValueTask OnEditGame(EditGameMessage message) => throw CoreThrowHelper.InvalidOperation;
 }

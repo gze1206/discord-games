@@ -101,6 +101,15 @@ public class WebSocketClient : IMessageHandler, IAsyncDisposable
             new PerudoHostGameData(maxPlayers, isClassicRule)
         ));
     }
+    
+    public void EditPerudo(string sessionName, int maxPlayers, bool isClassicRule)
+    {
+        this.ReserveSend(MessageSerializer.WriteEditGameMessage(
+            MessageChannel.Direct,
+            sessionName,
+            new PerudoHostGameData(maxPlayers, isClassicRule)
+        ));
+    }
 
     public ValueTask OnGreeting(GreetingMessage message)
     {
@@ -123,9 +132,6 @@ public class WebSocketClient : IMessageHandler, IAsyncDisposable
         return ValueTask.CompletedTask;
     }
 
-    public ValueTask OnHostGame(HostGameMessage message)
-    {
-        CoreThrowHelper.ThrowInvalidOperation();
-        return ValueTask.CompletedTask;
-    }
+    public ValueTask OnHostGame(HostGameMessage message) => ValueTask.FromException(CoreThrowHelper.InvalidOperation);
+    public ValueTask OnEditGame(EditGameMessage message) => ValueTask.FromException(CoreThrowHelper.InvalidOperation);
 }
