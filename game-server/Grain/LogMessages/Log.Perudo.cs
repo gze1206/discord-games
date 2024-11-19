@@ -10,6 +10,10 @@ public static partial class Log
     public static partial void LogPerudoInitSessionOk(this ILogger logger, string session, UserId userId, string sessionName, int maxPlayer, bool isClassicRule);
     
     [LoggerMessage(LogLevel.Information,
+        Message = "Session {sessionName}({session}) modified by {userId} [maxPlayer : {maxPlayer}, isClassicRule : {isClassicRule}]")]
+    public static partial void LogPerudoEditSessionOk(this ILogger logger, string session, UserId userId, string sessionName, int maxPlayer, bool isClassicRule);
+    
+    [LoggerMessage(LogLevel.Information,
         Message = "New round started from {session} [firstPlayer : {firstUserId}]")]
     public static partial void LogPerudoStartRound(this ILogger logger, string session, UserId firstUserId);
     

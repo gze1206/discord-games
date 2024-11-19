@@ -9,6 +9,9 @@ public interface IPerudoSessionGrain : IGameSessionGrain
     [Alias("InitSession")]
     ValueTask<InitPerudoSessionResult> InitSession(UserId userId, string sessionName, int maxPlayer, bool isClassicRule);
 
+    [Alias("EditSession")]
+    ValueTask<EditPerudoSessionResult> EditSession(UserId userId, string sessionName, int maxPlayer, bool isClassicRule);
+
     [Alias("PlaceBid")]
     ValueTask<PlaceBidResult> PlaceBid(int userId, int quantity, int face);
 

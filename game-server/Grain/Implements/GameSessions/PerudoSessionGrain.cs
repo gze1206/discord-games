@@ -88,14 +88,10 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
                 if (self.State.IsInitialized) return InitPerudoSessionResult.AlreadyInitialized;
                 if (maxPlayer is < DefaultMinPlayer or > DefaultMaxPlayer) return InitPerudoSessionResult.InvalidMaxPlayer;
 
+                self.SetSessionInfo(sessionName, maxPlayer, isClassicRule);
                 self.State.HostUserId = userId;
-                self.State.SessionName = sessionName;
-                self.State.MaxPlayer = maxPlayer;
-                self.State.IsClassicRule = isClassicRule;
                 self.State.IsInitialized = true;
                 self.State.Players.Add(userId);
-
-                self.playerInfoSelector = new PlayerInfoSelector(isClassicRule ? 5 : 3);
             
                 var user = self.GrainFactory.GetGrain<IUserGrain>(userId);
                 await user.SetSessionUid(self.GetPrimaryKeyString());
@@ -105,6 +101,32 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
                 return InitPerudoSessionResult.Ok;
             }
         }
+    }
+
+    public ValueTask<EditPerudoSessionResult> EditSession(UserId userId, string sessionName, int maxPlayer, bool isClassicRule)
+    {
+        using (this.logger.BeginScope("Perudo/EditSession"))
+        {
+            if (this.State.IsPlaying) return ValueTask.FromResult(EditPerudoSessionResult.AlreadyStarted);
+            if (!this.State.IsInitialized) return ValueTask.FromResult(EditPerudoSessionResult.NotInitialized);
+            if (this.State.HostUserId != userId) return ValueTask.FromResult(EditPerudoSessionResult.NotFromHostUser);
+            if (maxPlayer is < DefaultMinPlayer or > DefaultMaxPlayer) return ValueTask.FromResult(EditPerudoSessionResult.InvalidMaxPlayer);
+            
+            this.SetSessionInfo(sessionName, maxPlayer, isClassicRule);
+            
+            this.logger.LogPerudoEditSessionOk(this.GetPrimaryKeyString(), userId, sessionName, maxPlayer, isClassicRule);
+
+            return ValueTask.FromResult(EditPerudoSessionResult.Ok);
+        }
+    }
+
+    private void SetSessionInfo(string sessionName, int maxPlayer, bool isClassicRule)
+    {
+        this.State.SessionName = sessionName;
+        this.State.MaxPlayer = maxPlayer;
+        this.State.IsClassicRule = isClassicRule;
+
+        this.playerInfoSelector = new PlayerInfoSelector(isClassicRule ? 5 : 3);
     }
     
     public ValueTask<JoinPlayerResult> JoinPlayer(UserId userId)
