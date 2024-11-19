@@ -24,4 +24,8 @@ public static partial class Log
     [LoggerMessage(LogLevel.Information,
         Message = "Started game by {userId} from {session}")]
     public static partial void LogStartGameOk(this ILogger logger, string session, UserId userId);
+
+    [LoggerMessage(LogLevel.Information,
+        Message = "Host migrated from {prevHost} to {newHost} [sessionName : {sessionName}, sessionId : {sessionId}]")]
+    public static partial void LogMigrateHostOk(this ILogger logger, UserId prevHost, UserId newHost, string sessionName, string sessionId);
 }

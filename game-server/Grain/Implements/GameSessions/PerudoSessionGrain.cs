@@ -55,6 +55,24 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
             }
         }
     }
+    
+    private void SetSessionInfo(string sessionName, int maxPlayer, bool isClassicRule)
+    {
+        this.State.SessionName = sessionName;
+        this.State.MaxPlayer = maxPlayer;
+        this.State.IsClassicRule = isClassicRule;
+
+        this.playerInfoSelector = new PlayerInfoSelector(isClassicRule ? 5 : 3);
+    }
+
+    private void MigrateHost()
+    {
+        var prevHost = this.State.HostUserId;
+        var newHost = this.State.Players.FirstOrDefault(defaultValue: -1);
+        this.State.HostUserId = newHost;
+        
+        this.logger.LogMigrateHostOk(prevHost, newHost, this.State.SessionName!, this.GetPrimaryKeyString());
+    }
 
     private async PooledValueTask BroadcastExceptSender(UserId sender, byte[] data)
     {
@@ -70,6 +88,21 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
         {
             if (spectator == sender) continue;
 
+            var user = this.GrainFactory.GetGrain<IUserGrain>(spectator);
+            await user.ReserveSend(data);
+        }
+    }
+
+    private async PooledValueTask BroadcastToAll(byte[] data)
+    {
+        foreach (var player in this.State.Players)
+        {
+            var user = this.GrainFactory.GetGrain<IUserGrain>(player);
+            await user.ReserveSend(data);
+        }
+
+        foreach (var spectator in this.State.Spectators)
+        {
             var user = this.GrainFactory.GetGrain<IUserGrain>(spectator);
             await user.ReserveSend(data);
         }
@@ -119,15 +152,6 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
         }
     }
 
-    private void SetSessionInfo(string sessionName, int maxPlayer, bool isClassicRule)
-    {
-        this.State.SessionName = sessionName;
-        this.State.MaxPlayer = maxPlayer;
-        this.State.IsClassicRule = isClassicRule;
-
-        this.playerInfoSelector = new PlayerInfoSelector(isClassicRule ? 5 : 3);
-    }
-    
     public ValueTask<ResultCode> JoinPlayer(UserId userId)
     {
         return Internal(this, userId);
@@ -177,7 +201,9 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
 
                 var user = self.GrainFactory.GetGrain<IUserGrain>(userId);
                 await user.SetSessionUid(null);
-                
+
+                if (userId == self.State.HostUserId) self.MigrateHost();
+
                 self.logger.LogLeavePlayerOk(self.GetPrimaryKeyString(), userId);
                 
                 return ResultCode.Ok;
@@ -226,6 +252,8 @@ public class PerudoSessionGrain : Grain<PerudoSessionState>, IPerudoSessionGrain
             
                 var user = self.GrainFactory.GetGrain<IUserGrain>(userId);
                 await user.SetSessionUid(null);
+                
+                if (userId == self.State.HostUserId) self.MigrateHost();
             
                 self.logger.LogLeaveSpectatorOk(self.GetPrimaryKeyString(), userId);
             
